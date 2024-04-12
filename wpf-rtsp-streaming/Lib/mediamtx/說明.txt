@@ -1,0 +1,12 @@
+解壓縮 mediamtx_v1.6.0_windows_amd64.zip 後，在資料夾中會有一個 config 檔案 (mediamtx.yml)
+
+搜尋 rtspAddress 可以設定 RTSP Port，設定完成後Administrator啟動exe (mediamtx.exe)
+
+記得要開防火牆的port
+
+最後打開 cmd 選擇要串流的 video file (修改下方指令中的 output.mkv)，並決定串流位置(:8554/test_video) 執行後即可
+
+ffmpeg -re -stream_loop -1 -i "C:\\Users\\min.hsieh\\Desktop\\RTSP Simple Server\\merge video\\workbench\\workbench.mp4" -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8555/workbench
+ffmpeg -re -stream_loop -1 -i "C:\\Users\\min.hsieh\\Desktop\\RTSP Simple Server\\merge video\\cleanroom\\cleanroom.mp4" -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/cleanroom
+
+此方式支援高解析度的串流，目前看起來比 VLC 穩定

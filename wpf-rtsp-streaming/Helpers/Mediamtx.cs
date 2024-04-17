@@ -75,7 +75,14 @@ namespace wpf_rtsp_streaming.Helpers
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
-                        this.onMessage.OnNext(Regex.Replace(e.Data, "^[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ", ""));
+                        string message = Regex.Replace(e.Data, "^[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ", "");
+                        if (Regex.IsMatch(message, "^ERR"))
+                        {
+                            this.onError.OnNext(new Exception(message));
+                            return;
+                        }
+
+                        this.onMessage.OnNext(message);
                     }
                 };
                 this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>

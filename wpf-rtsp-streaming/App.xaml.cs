@@ -7,10 +7,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using wpf_rtsp_streaming.Helpers;
 
 namespace wpf_rtsp_streaming
 {
@@ -25,6 +25,8 @@ namespace wpf_rtsp_streaming
 
         public static string CommonPath { get; } = AppDomain.CurrentDomain.BaseDirectory;
         public static string AppName { get; } = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+
+        public static Mediamtx Mediamtx { get; set; }
 
         private static DirectoryInfo _logPath = new DirectoryInfo($"{App.CommonPath}\\logs");
         public static DirectoryInfo LogPath
@@ -83,6 +85,11 @@ namespace wpf_rtsp_streaming
 
         protected override void OnExit(ExitEventArgs e)
         {
+            if (App.Mediamtx != null)
+            {
+                App.Mediamtx.Dispose();
+            }
+
             PrintService.Log("App, Exit", Print.EMode.info);
 
             base.OnExit(e);

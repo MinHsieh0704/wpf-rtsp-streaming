@@ -82,6 +82,7 @@
       <DependentUpon>Loading.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converts\ReverseBooleanConverter.cs" />
+    <Compile Include="DataCenter\DataCenter.cs" />
     <Compile Include="Helpers\Mediamtx.cs" />
     <Compile Include="Helpers\Streaming.cs" />
     <Compile Include="MainWindow.xaml.cs">

@@ -248,7 +248,10 @@ namespace wpf_rtsp_streaming
                     {
                         try
                         {
-                            App.Streamings[item.Index - 1].Connect();
+                            if (App.Streamings != null)
+                            {
+                                App.Streamings[item.Index - 1].Connect();
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -322,8 +325,11 @@ namespace wpf_rtsp_streaming
 
                 DataCenter.DataCenter.StreamingInfo.Delete(streamingInfo);
 
-                Streaming streaming = App.Streamings.Where((n) => n.rtspPath == streamingInfo.RTSPPath).FirstOrDefault();
-                App.Streamings.Remove(streaming);
+                if (App.Streamings != null)
+                {
+                    Streaming streaming = App.Streamings.Where((n) => n.rtspPath == streamingInfo.RTSPPath).FirstOrDefault();
+                    App.Streamings.Remove(streaming);
+                }
             }
             catch (Exception ex)
             {
@@ -340,9 +346,12 @@ namespace wpf_rtsp_streaming
         {
             try
             {
-                foreach (var streaming in App.Streamings)
+                if (App.Streamings != null)
                 {
-                    streaming.Dispose();
+                    foreach (var streaming in App.Streamings)
+                    {
+                        streaming.Dispose();
+                    }
                 }
                 foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
                 {
@@ -391,7 +400,10 @@ namespace wpf_rtsp_streaming
                     }));
                 });
 
-                App.Streamings.Add(streaming);
+                if (App.Streamings != null)
+                {
+                    App.Streamings.Add(streaming);
+                }
             }
             catch (Exception ex)
             {
@@ -412,7 +424,10 @@ namespace wpf_rtsp_streaming
 
                     item.IsStart = false;
 
-                    App.Streamings[item.Index - 1].Disconnect();
+                    if (App.Streamings != null)
+                    {
+                        App.Streamings[item.Index - 1].Disconnect();
+                    }
                 }
 
                 this.Streaming.Items.Refresh();

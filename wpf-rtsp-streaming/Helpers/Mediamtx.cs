@@ -120,6 +120,8 @@ namespace wpf_rtsp_streaming.Helpers
                     if (!this.process.HasExited) this.process.Kill();
                     this.process.Close();
                     this.process.Dispose();
+
+                    this.process = null;
                 }
             }
             catch (Exception ex)

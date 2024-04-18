@@ -4,9 +4,597 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpf_rtsp_streaming"
+        xmlns:components="clr-namespace:wpf_rtsp_streaming.Components"
+        xmlns:convert="clr-namespace:wpf_rtsp_streaming.Converts"
+        xmlns:dc="clr-namespace:wpf_rtsp_streaming.DataCenter"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        ResizeMode="CanMinimize"
+        Width="800" Height="450">
+
+    <Window.Resources>
+        <dc:DataCenter x:Key="DataCenter"/>
+        <convert:ReverseBooleanConverter x:Key="ReverseBooleanConverter"/>
+
+        <Style TargetType="Grid" x:Key="Container">
+            <Setter Property="Margin" Value="10,10,10,10"/>
+        </Style>
+
+        <Style TargetType="components:Loading" x:Key="Loading">
+            <Setter Property="Visibility" Value="Hidden"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=IsShowLoading, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="components:AddSteaming" x:Key="AddSteaming">
+            <Setter Property="Visibility" Value="Hidden"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=IsShowAddSteamingForm, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="Label" x:Key="LabelVersion">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#e3e3e3"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+        </Style>
         
+        <Style TargetType="TextBox" x:Key="TextBoxItemStreaming">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="IsTabStop" Value="False"/>
+        </Style>
+
+        <Style TargetType="Button" x:Key="ButtonStart">
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder">
+                            <Border.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="Padding" Value="4,0"/>
+                                    <Setter Property="Background" Value="#ffffff"/>
+                                    <Setter Property="BorderBrush" Value="#006ab7"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                    <Setter Property="VerticalAlignment" Value="Top"/>
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                </Style>
+                            </Border.Resources>
+
+                            <Label x:Name="ButtonLabel">
+                                <Label.Resources>
+                                    <Style TargetType="Label">
+                                        <Setter Property="Content" Value="Start"/>
+                                        <Setter Property="Foreground" Value="#006ab7"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </Label.Resources>
+                            </Label>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#003b65"/>
+                                <Setter Property="Foreground" TargetName="ButtonLabel" Value="#003b65"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" TargetName="ButtonBorder" Value="#cecece"/>
+                                <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#cecece"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" x:Key="ButtonStop">
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder">
+                            <Border.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="Padding" Value="4,0"/>
+                                    <Setter Property="Background" Value="#ffffff"/>
+                                    <Setter Property="BorderBrush" Value="#ca4940"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                    <Setter Property="VerticalAlignment" Value="Top"/>
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                </Style>
+                            </Border.Resources>
+
+                            <Label x:Name="ButtonLabel">
+                                <Label.Resources>
+                                    <Style TargetType="Label">
+                                        <Setter Property="Content" Value="Stop"/>
+                                        <Setter Property="Foreground" Value="#ca4940"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </Label.Resources>
+                            </Label>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#86251e"/>
+                                <Setter Property="Foreground" TargetName="ButtonLabel" Value="#86251e"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" TargetName="ButtonBorder" Value="#cecece"/>
+                                <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#cecece"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" x:Key="ButtonAddStreaming">
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder">
+                            <Border.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="Padding" Value="4,0"/>
+                                    <Setter Property="Background" Value="#ffffff"/>
+                                    <Setter Property="BorderBrush" Value="#35cda8"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                    <Setter Property="VerticalAlignment" Value="Top"/>
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                </Style>
+                            </Border.Resources>
+
+                            <Label x:Name="ButtonLabel">
+                                <Label.Resources>
+                                    <Style TargetType="Label">
+                                        <Setter Property="Content" Value="Add Streaming"/>
+                                        <Setter Property="Foreground" Value="#35cda8"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </Label.Resources>
+                            </Label>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#14896d"/>
+                                <Setter Property="Foreground" TargetName="ButtonLabel" Value="#14896d"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" TargetName="ButtonBorder" Value="#cecece"/>
+                                <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#cecece"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" x:Key="ButtonStreamingStart">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Viewbox>
+                            <Viewbox.Resources>
+                                <Style TargetType="Viewbox">
+                                    <Setter Property="Width" Value="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+                                    <Setter Property="Height" Value="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+                                    <Setter Property="Stretch" Value="Fill"/>
+                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                </Style>
+                            </Viewbox.Resources>
+
+                            <Border>
+                                <Border.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Width" Value="16"/>
+                                        <Setter Property="Height" Value="16"/>
+                                        <Setter Property="CornerRadius" Value="16"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                        <Setter Property="Background" Value="#ffffff"/>
+                                        <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                    </Style>
+                                </Border.Resources>
+                                
+                                <Path x:Name="ButtonImage">
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="16"/>
+                                            <Setter Property="Height" Value="16"/>
+                                            <Setter Property="Stretch" Value="Fill"/>
+                                            <Setter Property="Fill" Value="#006ab7"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                            <Setter Property="Data" Value="M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8ZM15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1C11.866 1 15 4.13401 15 8ZM6.76499 4.57599C6.61085 4.47967 6.41658 4.47457 6.25761 4.56268C6.09864 4.6508 6 4.81824 6 5V11C6 11.1818 6.09864 11.3492 6.25762 11.4373C6.41661 11.5254 6.61088 11.5203 6.76502 11.424L11.565 8.42378C11.7111 8.3324 11.7999 8.17217 11.7999 7.99977C11.7999 7.82738 11.7111 7.66715 11.5649 7.57578L6.76499 4.57599ZM7 10.0978V5.9021L10.3566 7.99982L7 10.0978Z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+                            </Border>
+                        </Viewbox>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Fill" TargetName="ButtonImage" Value="#003b65"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Fill" TargetName="ButtonImage" Value="#cecece"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" x:Key="ButtonStreamingStop">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Viewbox>
+                            <Viewbox.Resources>
+                                <Style TargetType="Viewbox">
+                                    <Setter Property="Width" Value="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+                                    <Setter Property="Height" Value="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+                                    <Setter Property="Stretch" Value="Fill"/>
+                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                </Style>
+                            </Viewbox.Resources>
+
+                            <Border>
+                                <Border.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Width" Value="16"/>
+                                        <Setter Property="Height" Value="16"/>
+                                        <Setter Property="CornerRadius" Value="16"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                        <Setter Property="Background" Value="#ffffff"/>
+                                        <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                    </Style>
+                                </Border.Resources>
+                                
+                                <Path x:Name="ButtonImage">
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="16"/>
+                                            <Setter Property="Height" Value="16"/>
+                                            <Setter Property="Stretch" Value="Fill"/>
+                                            <Setter Property="Fill" Value="#006ab7"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                            <Setter Property="Data" Value="M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8ZM15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1C11.866 1 15 4.13401 15 8ZM5.5 5C5.22386 5 5 5.22386 5 5.5V10.5C5 10.7761 5.22386 11 5.5 11H10.5C10.7761 11 11 10.7761 11 10.5V5.5C11 5.22386 10.7761 5 10.5 5H5.5ZM6 10V6H10V10H6Z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+                            </Border>
+                        </Viewbox>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Fill" TargetName="ButtonImage" Value="#003b65"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Fill" TargetName="ButtonImage" Value="#cecece"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" x:Key="ButtonStreamingDelete">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Viewbox>
+                            <Viewbox.Resources>
+                                <Style TargetType="Viewbox">
+                                    <Setter Property="Width" Value="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+                                    <Setter Property="Height" Value="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}}"/>
+                                    <Setter Property="Stretch" Value="Fill"/>
+                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                </Style>
+                            </Viewbox.Resources>
+
+                            <Border>
+                                <Border.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Width" Value="16"/>
+                                        <Setter Property="Height" Value="16"/>
+                                        <Setter Property="CornerRadius" Value="16"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                        <Setter Property="Background" Value="#ffffff"/>
+                                        <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                    </Style>
+                                </Border.Resources>
+                                
+                                <Path x:Name="ButtonImage">
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="16"/>
+                                            <Setter Property="Height" Value="16"/>
+                                            <Setter Property="Stretch" Value="Fill"/>
+                                            <Setter Property="Fill" Value="#006ab7"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                            <Setter Property="Data" Value="M5 1.5C5 1.22386 5.22386 1 5.5 1H10.5C10.7761 1 11 1.22386 11 1.5V3.5H12.5H14.5C14.7761 3.5 15 3.72386 15 4C15 4.27614 14.7761 4.5 14.5 4.5H13V14.5C13 14.7761 12.7761 15 12.5 15H10H8H6H3.5C3.22386 15 3 14.7761 3 14.5V4.5H1.5C1.22386 4.5 1 4.27614 1 4C1 3.72386 1.22386 3.5 1.5 3.5H3.5H5V1.5ZM10.5 14V6C10.5 5.72386 10.2761 5.5 10 5.5C9.72386 5.5 9.5 5.72386 9.5 6V14H8.5V6C8.5 5.72386 8.27614 5.5 8 5.5C7.72386 5.5 7.5 5.72386 7.5 6V14H6.5V6C6.5 5.72386 6.27614 5.5 6 5.5C5.72386 5.5 5.5 5.72386 5.5 6V14H4V4.5H5.5H10.5H12V14H10.5ZM6 3.5H10V2H6V3.5Z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+                            </Border>
+                        </Viewbox>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Fill" TargetName="ButtonImage" Value="#003b65"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Fill" TargetName="ButtonImage" Value="#cecece"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ListViewItem" x:Key="ListViewItemStreaming">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="#003b65"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="ListView" x:Key="ListViewStreaming">
+            <Setter Property="Height" Value="{Binding Path=ActualHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel}}"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource ListViewItemStreaming}"/>
+            <Setter Property="IsTabStop" Value="False"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Style="{StaticResource Container}">
+        <components:Loading>
+            <components:Loading.Resources>
+                <Style TargetType="components:Loading" BasedOn="{StaticResource Loading}">
+                </Style>
+            </components:Loading.Resources>
+        </components:Loading>
+        
+        <components:AddSteaming Save="AddSteaming_Save" Cancel="AddSteaming_Cancel">
+            <components:AddSteaming.Resources>
+                <Style TargetType="components:AddSteaming" BasedOn="{StaticResource AddSteaming}">
+                </Style>
+            </components:AddSteaming.Resources>
+        </components:AddSteaming>
+        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Canvas>
+                <Canvas.Resources>
+                    <Style TargetType="Canvas">
+                        <Setter Property="Grid.Row" Value="0"/>
+                    </Style>
+                </Canvas.Resources>
+
+                <Button Click="ButtonStart_Click">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource ButtonStart}">
+                            <Setter Property="Canvas.Left" Value="0"/>
+                            <Setter Property="IsEnabled" Value="{Binding Path=IsStart, Converter={StaticResource ReverseBooleanConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <Button Click="ButtonStop_Click">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource ButtonStop}">
+                            <Setter Property="Canvas.Left" Value="65"/>
+                            <Setter Property="IsEnabled" Value="{Binding Path=IsStart, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <Button Click="ButtonAddStreaming_Click">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource ButtonAddStreaming}">
+                            <Setter Property="Canvas.Right" Value="0"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Canvas>
+
+            <Grid>
+                <Grid.Resources>
+                    <Style TargetType="Grid">
+                        <Setter Property="Grid.Row" Value="1"/>
+                        <Setter Property="Margin" Value="0,0,0,27"/>
+                    </Style>
+                </Grid.Resources>
+                
+                <ListView x:Name="Streaming">
+                    <ListView.Resources>
+                        <Style TargetType="ListView" BasedOn="{StaticResource ListViewStreaming}">
+                            <Setter Property="ItemsSource" Value="{Binding Path=StreamingInfo.StreamingInfos, Source={StaticResource DataCenter}}"/>
+                        </Style>
+                    </ListView.Resources>
+
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="No." Width="45">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox>
+                                            <TextBox.Resources>
+                                                <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxItemStreaming}">
+                                                    <Setter Property="Text" Value="{Binding Path=Index}"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </Style>
+                                            </TextBox.Resources>
+                                        </TextBox>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header="File" Width="295">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox>
+                                            <TextBox.Resources>
+                                                <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxItemStreaming}">
+                                                    <Setter Property="Text" Value="{Binding Path=FilePath}"/>
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                </Style>
+                                            </TextBox.Resources>
+                                        </TextBox>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header="URL" Width="295">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox>
+                                            <TextBox.Resources>
+                                                <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxItemStreaming}">
+                                                    <Setter Property="Text" Value="{Binding Path=URL}"/>
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                </Style>
+                                            </TextBox.Resources>
+                                        </TextBox>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header="Action" Width="102">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <StackPanel.Resources>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Orientation" Value="Horizontal"/>
+                                                </Style>
+                                            </StackPanel.Resources>
+
+                                            <Button Click="ButtonStreamingStart_Click">
+                                                <Button.Resources>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource ButtonStreamingStart}">
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                        
+                                                        <Style.Triggers>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding Path=IsStart, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" Value="True"/>
+                                                                    <Condition Binding="{Binding Path=IsStart}" Value="False"/>
+                                                                </MultiDataTrigger.Conditions>
+
+                                                                <MultiDataTrigger.Setters>
+                                                                    <Setter Property="IsEnabled" Value="True"/>
+                                                                </MultiDataTrigger.Setters>
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Resources>
+                                            </Button>
+
+                                            <Button Click="ButtonStreamingStop_Click">
+                                                <Button.Resources>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource ButtonStreamingStop}">
+                                                        <Setter Property="Margin" Value="8 0 0 0"/>
+                                                        <Setter Property="IsEnabled" Value="False"/>
+
+                                                        <Style.Triggers>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding Path=IsStart, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" Value="True"/>
+                                                                    <Condition Binding="{Binding Path=IsStart}" Value="True"/>
+                                                                </MultiDataTrigger.Conditions>
+
+                                                                <MultiDataTrigger.Setters>
+                                                                    <Setter Property="IsEnabled" Value="True"/>
+                                                                </MultiDataTrigger.Setters>
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Resources>
+                                            </Button>
+
+                                            <Button Click="ButtonStreamingDelete_Click">
+                                                <Button.Resources>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource ButtonStreamingDelete}">
+                                                        <Setter Property="Margin" Value="8 0 0 0"/>
+
+                                                        <Style.Triggers>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding Path=IsStart}" Value="True"/>
+                                                                </MultiDataTrigger.Conditions>
+
+                                                                <MultiDataTrigger.Setters>
+                                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                                </MultiDataTrigger.Setters>
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Resources>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
+        </Grid>
+
+        <Label>
+            <Label.Resources>
+                <Style TargetType="Label" BasedOn="{StaticResource LabelVersion}">
+                    <Setter Property="Content" Value="{Binding Path=AppVersion, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                </Style>
+            </Label.Resources>
+        </Label>
     </Grid>
 </Window>

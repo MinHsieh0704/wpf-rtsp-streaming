@@ -28,6 +28,15 @@
             </Style.Triggers>
         </Style>
 
+        <Style TargetType="components:AddSteaming" x:Key="AddSteaming">
+            <Setter Property="Visibility" Value="Hidden"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=IsShowAddSteamingForm, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style TargetType="Label" x:Key="LabelVersion">
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="#e3e3e3"/>
@@ -388,6 +397,13 @@
                 </Style>
             </components:Loading.Resources>
         </components:Loading>
+        
+        <components:AddSteaming Save="AddSteaming_Save" Cancel="AddSteaming_Cancel">
+            <components:AddSteaming.Resources>
+                <Style TargetType="components:AddSteaming" BasedOn="{StaticResource AddSteaming}">
+                </Style>
+            </components:AddSteaming.Resources>
+        </components:AddSteaming>
         
         <Grid>
             <Grid.RowDefinitions>

@@ -100,9 +100,12 @@ namespace wpf_rtsp_streaming
 
         protected override void OnExit(ExitEventArgs e)
         {
-            foreach (var streaming in App.Streamings)
+            if (App.Streamings != null)
             {
-                streaming.Dispose();
+                foreach (var streaming in App.Streamings)
+                {
+                    streaming.Dispose();
+                }
             }
             if (App.Mediamtx != null)
             {

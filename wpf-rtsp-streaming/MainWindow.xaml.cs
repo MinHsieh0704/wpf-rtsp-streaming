@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using wpf_rtsp_streaming.Helpers;
-using static wpf_rtsp_streaming.DataCenter.StreamingInfo;
 
 namespace wpf_rtsp_streaming
 {
@@ -47,6 +46,16 @@ namespace wpf_rtsp_streaming
         // Using a DependencyProperty as the backing store for IsShowLoading.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty IsShowLoadingProperty =
             DependencyProperty.Register("IsShowLoading", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
+
+        public bool IsShowAddSteamingForm
+        {
+            get { return (bool)GetValue(IsShowAddSteamingFormProperty); }
+            set { SetValue(IsShowAddSteamingFormProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for IsShowAddSteamingForm.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty IsShowAddSteamingFormProperty =
+            DependencyProperty.Register("IsShowAddSteamingForm", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
 
         public MainWindow()
         {
@@ -161,11 +170,43 @@ namespace wpf_rtsp_streaming
             }
         }
 
+        private void AddSteaming_Save(object sender, Components.AddSteaming.StreamingEventArgs e)
+        {
+            try
+            {
+                DataCenter.StreamingInfo.IStreamingInfo streamingInfo = new DataCenter.StreamingInfo.IStreamingInfo()
+                {
+                    FilePath = e.FilePath,
+                    RTSPPath = e.RTSPPath,
+                    IsStart = false,
+                };
+                DataCenter.DataCenter.StreamingInfo.Add(streamingInfo);
+
+                this.InitStreaming(streamingInfo);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private void AddSteaming_Cancel(object sender, EventArgs e)
+        {
+            try
+            {
+                this.IsShowAddSteamingForm = false;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         private void ButtonAddStreaming_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-
+                this.IsShowAddSteamingForm = true;
             }
             catch (Exception ex)
             {

@@ -8,13 +8,12 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Windows;
+using wpf_rtsp_streaming.Helpers;
 
 namespace wpf_rtsp_streaming.DataCenter
 {
     public partial class StreamingInfo : DependencyObject
     {
-        public string FilePath { get; set; }
-
         public class IStreamingInfo
         {
             [JsonIgnore]
@@ -37,6 +36,10 @@ namespace wpf_rtsp_streaming.DataCenter
         public static readonly DependencyProperty StreamingInfosProperty =
             DependencyProperty.Register("StreamingInfosProperty", typeof(ObservableCollection<IStreamingInfo>), typeof(StreamingInfo), new PropertyMetadata(new ObservableCollection<IStreamingInfo>()));
 
+        public string FilePath { get; set; }
+
+        public IPAddress address { get; set; }
+
         /// <summary>
         /// Read
         /// </summary>
@@ -49,7 +52,6 @@ namespace wpf_rtsp_streaming.DataCenter
                     return;
                 }
 
-                IPAddress address = null;
                 foreach (NetworkInterface network in NetworkInterface.GetAllNetworkInterfaces())
                 {
                     IPInterfaceProperties interfaceProperties = network.GetIPProperties();
@@ -66,7 +68,7 @@ namespace wpf_rtsp_streaming.DataCenter
                             continue;
                         }
 
-                        address = _address;
+                        this.address = _address;
                     }
                 }
 
@@ -87,7 +89,7 @@ namespace wpf_rtsp_streaming.DataCenter
                                     Index = i + 1,
                                     FilePath = streaming.FilePath,
                                     RTSPPath = streaming.RTSPPath,
-                                    URL = $"rtsp://{(address == null ? "127.0.0.1" : address.ToString())}:8554/{streaming.RTSPPath}",
+                                    URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:8554/{streaming.RTSPPath}",
                                     IsStart = false,
                                 });
                             }
@@ -138,7 +140,14 @@ namespace wpf_rtsp_streaming.DataCenter
                     throw new Exception($"RTSP Path \"{info.RTSPPath}\" is already used");
                 }
 
-                this.StreamingInfos.Add(info);
+                this.StreamingInfos.Add(new IStreamingInfo()
+                {
+                    Index = this.StreamingInfos.Count() + 1,
+                    FilePath = info.FilePath,
+                    RTSPPath = info.RTSPPath,
+                    URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:8554/{info.RTSPPath}",
+                    IsStart = false,
+                });
 
                 this.Write();
             }

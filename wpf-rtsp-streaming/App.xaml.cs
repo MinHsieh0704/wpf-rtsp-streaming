@@ -27,6 +27,7 @@ namespace wpf_rtsp_streaming
         public static string AppName { get; } = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
 
         public static Mediamtx Mediamtx { get; set; }
+        public static List<Streaming> Streamings { get; set; }
 
         private static DirectoryInfo _logPath = new DirectoryInfo($"{App.CommonPath}\\logs");
         public static DirectoryInfo LogPath
@@ -41,6 +42,17 @@ namespace wpf_rtsp_streaming
                 }
 
                 return _logPath;
+            }
+        }
+
+        private static FileInfo _streamingFile = new FileInfo($"{App.CommonPath}\\streaming.json");
+        public static FileInfo StreamingFile
+        {
+            get
+            {
+                _streamingFile.Refresh();
+
+                return _streamingFile;
             }
         }
 
@@ -72,6 +84,9 @@ namespace wpf_rtsp_streaming
                 LogService.Write("");
                 PrintService.Log("App, Start", Print.EMode.info);
 
+                DataCenter.DataCenter.StreamingInfo.FilePath = StreamingFile.FullName;
+                DataCenter.DataCenter.StreamingInfo.Read();
+
                 base.OnStartup(e);
             }
             catch (Exception ex)
@@ -85,6 +100,10 @@ namespace wpf_rtsp_streaming
 
         protected override void OnExit(ExitEventArgs e)
         {
+            foreach (var streaming in App.Streamings)
+            {
+                streaming.Dispose();
+            }
             if (App.Mediamtx != null)
             {
                 App.Mediamtx.Dispose();

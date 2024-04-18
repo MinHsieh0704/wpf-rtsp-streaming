@@ -3,13 +3,13 @@ using Min_Helpers.PrintHelper;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using wpf_rtsp_streaming.Helpers;
+using static wpf_rtsp_streaming.DataCenter.StreamingInfo;
 
 namespace wpf_rtsp_streaming
 {
@@ -60,69 +60,6 @@ namespace wpf_rtsp_streaming
                 FileVersionInfo fileInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
 
                 this.AppVersion = $"v{fileInfo.FileVersion}";
-
-                //Task.Run(new Action(async () =>
-                //{
-                //    try
-                //    {
-                //        Streaming streaming1 = new Streaming();
-
-                //        string filePath1 = "C:\\\\Users\\\\min.hsieh\\\\Desktop\\\\RTSP Simple Server\\\\merge video\\\\cleanroom\\\\cleanroom.mp4";
-                //        string rtspPath1 = "cleanroom";
-
-                //        streaming1.onMessage.Subscribe((x) =>
-                //        {
-                //            this.Dispatcher.Invoke(new Action(() =>
-                //            {
-                //                App.PrintService.Log($"Streaming_{rtspPath1} [{streaming1.processId}], {x}", Print.EMode.message);
-                //            }));
-                //        });
-                //        streaming1.onError.Subscribe((x) =>
-                //        {
-                //            this.Dispatcher.Invoke(new Action(() =>
-                //            {
-                //                x = ExceptionHelper.GetReal(x);
-                //                string message = x.Message;
-
-                //                App.PrintService.Log($"Streaming_{rtspPath1} [{streaming1.processId}], {message}", Print.EMode.error);
-                //            }));
-                //        });
-
-                //        streaming1.Connect(filePath1, rtspPath1);
-
-                //        Streaming streaming2 = new Streaming();
-
-                //        string filePath2 = "C:\\\\Users\\\\min.hsieh\\\\Desktop\\\\RTSP Simple Server\\\\merge video\\\\workbench\\\\workbench.mp4";
-                //        string rtspPath2 = "workbench";
-
-                //        streaming2.onMessage.Subscribe((x) =>
-                //        {
-                //            this.Dispatcher.Invoke(new Action(() =>
-                //            {
-                //                App.PrintService.Log($"Streaming_{rtspPath2} [{streaming2.processId}], {x}", Print.EMode.message);
-                //            }));
-                //        });
-                //        streaming2.onError.Subscribe((x) =>
-                //        {
-                //            this.Dispatcher.Invoke(new Action(() =>
-                //            {
-                //                x = ExceptionHelper.GetReal(x);
-                //                string message = x.Message;
-
-                //                App.PrintService.Log($"Streaming_{rtspPath2} [{streaming2.processId}], {message}", Print.EMode.error);
-                //            }));
-                //        });
-
-                //        streaming2.Connect(filePath2, rtspPath2);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        ex = ExceptionHelper.GetReal(ex);
-                //        string message = ex.Message;
-
-                //        App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
-                //    }
-                //}));
             }
             catch (Exception ex)
             {
@@ -160,9 +97,7 @@ namespace wpf_rtsp_streaming
                         {
                             this.Dispatcher.Invoke(new Action(() =>
                             {
-                                App.Mediamtx.Dispose();
-
-                                this.IsStart = false;
+                                this.StopMediamtx();
 
                                 x = ExceptionHelper.GetReal(x);
                                 string message = x.Message;
@@ -186,6 +121,12 @@ namespace wpf_rtsp_streaming
                     }
                 }));
 
+                App.Streamings = new List<Streaming>();
+                foreach (var streamingInfo in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
+                {
+                    this.InitStreaming(streamingInfo);
+                }
+
                 this.IsStart = true;
             }
             catch (Exception ex)
@@ -207,9 +148,7 @@ namespace wpf_rtsp_streaming
         {
             try
             {
-                App.Mediamtx.Dispose();
-
-                this.IsStart = false;
+                this.StopMediamtx();
             }
             catch (Exception ex)
             {
@@ -236,6 +175,210 @@ namespace wpf_rtsp_streaming
                 App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
 
                 MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ButtonStreamingStart_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Button element = sender as Button;
+                if (element == null)
+                {
+                    return;
+                }
+
+                DataCenter.StreamingInfo.IStreamingInfo streamingInfo = element.DataContext as DataCenter.StreamingInfo.IStreamingInfo;
+                if (streamingInfo == null)
+                {
+                    return;
+                }
+
+                foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
+                {
+                    if (item.Index != streamingInfo.Index)
+                    {
+                        continue;
+                    }
+
+                    item.IsStart = true;
+
+                    await Task.Run(new Action(() =>
+                    {
+                        try
+                        {
+                            App.Streamings[item.Index - 1].Connect();
+                        }
+                        catch (Exception ex)
+                        {
+                            ex = ExceptionHelper.GetReal(ex);
+                            string message = ex.Message;
+
+                            App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
+
+                            MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }));
+                }
+
+                this.Streaming.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                ex = ExceptionHelper.GetReal(ex);
+                string message = ex.Message;
+
+                App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
+
+                MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ButtonStreamingStop_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Button element = sender as Button;
+                if (element == null)
+                {
+                    return;
+                }
+
+                DataCenter.StreamingInfo.IStreamingInfo streamingInfo = element.DataContext as DataCenter.StreamingInfo.IStreamingInfo;
+                if (streamingInfo == null)
+                {
+                    return;
+                }
+
+                this.StopStreaming(streamingInfo);
+            }
+            catch (Exception ex)
+            {
+                ex = ExceptionHelper.GetReal(ex);
+                string message = ex.Message;
+
+                App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
+
+                MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ButtonStreamingDelete_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Button element = sender as Button;
+                if (element == null)
+                {
+                    return;
+                }
+
+                DataCenter.StreamingInfo.IStreamingInfo streamingInfo = element.DataContext as DataCenter.StreamingInfo.IStreamingInfo;
+                if (streamingInfo == null)
+                {
+                    return;
+                }
+
+                DataCenter.DataCenter.StreamingInfo.Delete(streamingInfo);
+
+                Streaming streaming = App.Streamings.Where((n) => n.rtspPath == streamingInfo.RTSPPath).FirstOrDefault();
+                App.Streamings.Remove(streaming);
+            }
+            catch (Exception ex)
+            {
+                ex = ExceptionHelper.GetReal(ex);
+                string message = ex.Message;
+
+                App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
+
+                MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void StopMediamtx()
+        {
+            try
+            {
+                foreach (var streaming in App.Streamings)
+                {
+                    streaming.Dispose();
+                }
+                foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
+                {
+                    item.IsStart = false;
+                }
+
+                App.Mediamtx.Dispose();
+
+                this.IsStart = false;
+
+                this.Streaming.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private void InitStreaming(DataCenter.StreamingInfo.IStreamingInfo streamingInfo)
+        {
+            try
+            {
+                Streaming streaming = new Streaming();
+                streaming.filePath = streamingInfo.FilePath;
+                streaming.rtspPath = streamingInfo.RTSPPath;
+
+                streaming.onMessage.Subscribe((x) =>
+                {
+                    this.Dispatcher.Invoke(new Action(() =>
+                    {
+                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {x}", Print.EMode.message);
+                    }));
+                });
+                streaming.onError.Subscribe((x) =>
+                {
+                    this.Dispatcher.Invoke(new Action(() =>
+                    {
+                        this.StopStreaming(streamingInfo);
+
+                        x = ExceptionHelper.GetReal(x);
+                        string message = x.Message;
+
+                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.error);
+
+                        MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }));
+                });
+
+                App.Streamings.Add(streaming);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private void StopStreaming(DataCenter.StreamingInfo.IStreamingInfo streamingInfo)
+        {
+            try
+            {
+                foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
+                {
+                    if (item.Index != streamingInfo.Index)
+                    {
+                        continue;
+                    }
+
+                    item.IsStart = false;
+
+                    App.Streamings[item.Index - 1].Disconnect();
+                }
+
+                this.Streaming.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
     }

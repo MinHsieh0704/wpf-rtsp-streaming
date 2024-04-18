@@ -159,6 +159,13 @@ namespace wpf_rtsp_streaming.DataCenter
                 IStreamingInfo _info = this.StreamingInfos.Where((n) => n.RTSPPath == info.RTSPPath).FirstOrDefault();
                 this.StreamingInfos.Remove(_info);
 
+                for (int i = 0; i < this.StreamingInfos.Count(); i++)
+                {
+                    IStreamingInfo streaming = this.StreamingInfos[i];
+
+                    streaming.Index = i + 1;
+                }
+
                 this.Write();
             }
             catch (Exception ex)

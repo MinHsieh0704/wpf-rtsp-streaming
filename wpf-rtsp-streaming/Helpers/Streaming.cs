@@ -15,6 +15,9 @@ namespace wpf_rtsp_streaming.Helpers
 
         public Subject<Exception> onError { get; } = new Subject<Exception>();
 
+        public string filePath { get; set; }
+        public string rtspPath { get; set; }
+
         #region Dispose
         private bool disposed { get; set; } = false;
 
@@ -49,7 +52,7 @@ namespace wpf_rtsp_streaming.Helpers
         /// <summary>
         /// Connect
         /// </summary>
-        public void Connect(string filePath, string rtspPath)
+        public void Connect()
         {
             try
             {
@@ -66,7 +69,7 @@ namespace wpf_rtsp_streaming.Helpers
                 this.process.StartInfo.RedirectStandardOutput = true;
                 this.process.StartInfo.RedirectStandardError = true;
                 this.process.StartInfo.CreateNoWindow = true;
-                this.process.StartInfo.Arguments = $"-re -stream_loop -1 -i \"{filePath}\" -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/{rtspPath}";
+                this.process.StartInfo.Arguments = $"-re -stream_loop -1 -i \"{this.filePath}\" -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/{this.rtspPath}";
 
                 this.process.EnableRaisingEvents = true;
 
@@ -81,7 +84,7 @@ namespace wpf_rtsp_streaming.Helpers
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
-                        this.onError.OnNext(new Exception(e.Data));
+                        this.onMessage.OnNext(e.Data);
                     }
                 };
 

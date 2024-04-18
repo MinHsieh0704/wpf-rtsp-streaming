@@ -215,8 +215,8 @@
         <Grid>
             <Grid.Resources>
                 <Style TargetType="Grid">
-                    <Setter Property="Width" Value="1280"/>
-                    <Setter Property="Height" Value="800"/>
+                    <Setter Property="Width" Value="800"/>
+                    <Setter Property="Height" Value="450"/>
                     <Setter Property="SnapsToDevicePixels" Value="True"/>
                 </Style>
             </Grid.Resources>

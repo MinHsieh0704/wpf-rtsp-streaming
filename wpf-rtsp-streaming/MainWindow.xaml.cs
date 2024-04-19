@@ -223,6 +223,8 @@ namespace wpf_rtsp_streaming
         {
             try
             {
+                this.IsShowLoading = true;
+
                 Button element = sender as Button;
                 if (element == null)
                 {
@@ -275,6 +277,10 @@ namespace wpf_rtsp_streaming
                 App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
 
                 MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                this.IsShowLoading = false;
             }
         }
 

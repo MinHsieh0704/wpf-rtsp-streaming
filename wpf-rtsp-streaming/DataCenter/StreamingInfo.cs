@@ -140,14 +140,10 @@ namespace wpf_rtsp_streaming.DataCenter
                     throw new Exception($"RTSP Path \"{info.RTSPPath}\" is already used");
                 }
 
-                this.StreamingInfos.Add(new IStreamingInfo()
-                {
-                    Index = this.StreamingInfos.Count() + 1,
-                    FilePath = info.FilePath,
-                    RTSPPath = info.RTSPPath,
-                    URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:8554/{info.RTSPPath}",
-                    IsStart = false,
-                });
+                info.Index = this.StreamingInfos.Count() + 1;
+                info.URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:8554/{info.RTSPPath}";
+
+                this.StreamingInfos.Add(info);
 
                 this.Write();
             }

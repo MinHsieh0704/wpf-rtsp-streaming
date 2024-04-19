@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reactive.Subjects;
+using System.Text.RegularExpressions;
 
 namespace wpf_rtsp_streaming.Helpers
 {
@@ -84,6 +85,13 @@ namespace wpf_rtsp_streaming.Helpers
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
+                        string message = e.Data;
+                        if (Regex.IsMatch(message, "fail", RegexOptions.IgnoreCase))
+                        {
+                            this.onError.OnNext(new Exception(message));
+                            return;
+                        }
+
                         this.onMessage.OnNext(e.Data);
                     }
                 };

@@ -84,6 +84,15 @@ namespace wpf_rtsp_streaming.Components
         {
             try
             {
+                if (string.IsNullOrEmpty(this.FilePath))
+                {
+                    return;
+                }
+                if (string.IsNullOrEmpty(this.RTSPPath))
+                {
+                    return;
+                }
+
                 if (this.Save != null)
                 {
                     this.Save(this, new StreamingEventArgs(this.FilePath, this.RTSPPath));

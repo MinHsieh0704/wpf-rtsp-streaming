@@ -7,6 +7,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,6 +25,9 @@ namespace wpf_rtsp_streaming
         public static Print PrintService { get; set; } = null;
 
         public static Log LogService { get; set; } = null;
+
+        public static readonly TimeSpan LogExpiredDate = TimeSpan.FromDays(3);
+        public static readonly Subject<bool> LogExpiredStop = new Subject<bool>();
 
         public static string CommonPath { get; } = AppDomain.CurrentDomain.BaseDirectory;
         public static string AppName { get; } = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
@@ -87,6 +93,8 @@ namespace wpf_rtsp_streaming
                 DataCenter.DataCenter.StreamingInfo.FilePath = StreamingFile.FullName;
                 DataCenter.DataCenter.StreamingInfo.Read();
 
+                App.StartLogExpiredService();
+
                 base.OnStartup(e);
             }
             catch (Exception ex)
@@ -111,6 +119,8 @@ namespace wpf_rtsp_streaming
             {
                 App.Mediamtx.Dispose();
             }
+
+            App.LogExpiredStop.OnNext(true);
 
             PrintService.Log("App, Exit", Print.EMode.info);
 
@@ -139,6 +149,46 @@ namespace wpf_rtsp_streaming
         {
             var ex = ExceptionHelper.GetReal(e.Exception);
             PrintService.Log($"Dispatcher_UnhandledException: {ex.ToString()}", Print.EMode.warning);
+        }
+
+        private static void StartLogExpiredService()
+        {
+            try
+            {
+                Observable
+                    .Interval(TimeSpan.FromHours(1))
+                    .TakeUntil(App.LogExpiredStop)
+                    .StartWith(0)
+                    .Delay(TimeSpan.FromSeconds(0))
+                    .ObserveOn(NewThreadScheduler.Default)
+                    .Select((x) => Observable.FromAsync(async () =>
+                    {
+                        DateTime expiredDate = DateTime.Now - App.LogExpiredDate;
+
+                        FileInfo[] files = App.LogPath.GetFiles();
+                        foreach (var file in files)
+                        {
+                            try
+                            {
+                                if (DateTime.Compare(file.LastWriteTime, expiredDate) < 0)
+                                {
+                                    file.Delete();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                            }
+                        }
+
+                        return x;
+                    }))
+                    .Concat()
+                    .Subscribe();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
     }
 }

@@ -162,16 +162,13 @@
                                 <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#cecece"/>
                             </Trigger>
 
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding Path=FilePath, Converter={StaticResource EmptyStringCheckConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Value="True"/>
-                                    <Condition Binding="{Binding Path=RTSPPath, Converter={StaticResource EmptyStringCheckConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Value="True"/>
-                                </MultiDataTrigger.Conditions>
-
-                                <MultiDataTrigger.Setters>
-                                    <Setter Property="IsEnabled" Value="False"/>
-                                </MultiDataTrigger.Setters>
-                            </MultiDataTrigger>
+                            <DataTrigger Binding="{Binding Path=FilePath, Converter={StaticResource EmptyStringCheckConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                            
+                            <DataTrigger Binding="{Binding Path=RTSPPath, Converter={StaticResource EmptyStringCheckConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>

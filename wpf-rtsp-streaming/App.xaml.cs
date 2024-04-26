@@ -79,6 +79,8 @@ namespace wpf_rtsp_streaming
                 if (processes.Count() > 0)
                 {
                     PrintService.Log("App was opened repeatedly", Print.EMode.warning, "startup");
+
+                    App.Current.Shutdown();
                     return;
                 }
 

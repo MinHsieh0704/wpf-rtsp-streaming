@@ -4,6 +4,7 @@ using Min_Helpers.PrintHelper;
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace wpf_rtsp_streaming.Components
 {
@@ -31,6 +32,16 @@ namespace wpf_rtsp_streaming.Components
         // Using a DependencyProperty as the backing store for RTSPPath.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty RTSPPathProperty =
             DependencyProperty.Register("RTSPPath", typeof(string), typeof(AddSteaming), new PropertyMetadata(null));
+
+        public bool IsSaveEnabled
+        {
+            get { return (bool)GetValue(IsSaveEnabledProperty); }
+            set { SetValue(IsSaveEnabledProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for IsSaveEnabled.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty IsSaveEnabledProperty =
+            DependencyProperty.Register("IsSaveEnabled", typeof(bool), typeof(AddSteaming), new PropertyMetadata(false));
 
         public class StreamingEventArgs : EventArgs
         {
@@ -131,6 +142,42 @@ namespace wpf_rtsp_streaming.Components
                 App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
 
                 MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void TextBoxFilePath_KeyUp(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                TextBox element = sender as TextBox;
+                if (element == null)
+                {
+                    return;
+                }
+
+                this.IsSaveEnabled = !string.IsNullOrEmpty(element.Text) && !string.IsNullOrEmpty(this.RTSPPath);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private void TextBoxRTSPPath_KeyUp(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                TextBox element = sender as TextBox;
+                if (element == null)
+                {
+                    return;
+                }
+
+                this.IsSaveEnabled = !string.IsNullOrEmpty(element.Text) && !string.IsNullOrEmpty(this.FilePath);
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
     }

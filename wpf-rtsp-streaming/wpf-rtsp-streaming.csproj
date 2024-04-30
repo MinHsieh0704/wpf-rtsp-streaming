@@ -88,7 +88,6 @@
     <Compile Include="Components\Loading.xaml.cs">
       <DependentUpon>Loading.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Converts\EmptyStringCheckConverter.cs" />
     <Compile Include="Converts\ReverseBooleanConverter.cs" />
     <Compile Include="DataCenter\DataCenter.cs" />
     <Compile Include="DataCenter\StreamingInfo.cs" />

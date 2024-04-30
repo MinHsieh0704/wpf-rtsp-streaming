@@ -69,6 +69,12 @@ namespace wpf_rtsp_streaming
 
             try
             {
+                bool isDebugMode = false;
+                if (e.Args != null && e.Args.Length != 0)
+                {
+                    isDebugMode = e.Args[0].ToLower() == "debug";
+                }
+
                 LogService = new Log();
                 LogService.LogPath = LogPath.FullName;
 
@@ -76,7 +82,7 @@ namespace wpf_rtsp_streaming
 
                 Process currentProcess = Process.GetCurrentProcess();
                 List<Process> processes = Process.GetProcesses().Where((n) => n.ProcessName == currentProcess.ProcessName).Where((n) => n.Id != currentProcess.Id).ToList();
-                if (processes.Count() > 0)
+                if (processes.Count() > 0 && !isDebugMode)
                 {
                     PrintService.Log("App was opened repeatedly", Print.EMode.warning, "startup");
 

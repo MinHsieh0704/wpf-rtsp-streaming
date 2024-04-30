@@ -86,7 +86,7 @@ namespace wpf_rtsp_streaming.Helpers
                     if (!string.IsNullOrEmpty(e.Data))
                     {
                         string message = e.Data;
-                        if (Regex.IsMatch(message, "fail", RegexOptions.IgnoreCase))
+                        if (Regex.IsMatch(message.ToLower(), "fail|error", RegexOptions.IgnoreCase))
                         {
                             this.onError.OnNext(new Exception(message));
                             return;

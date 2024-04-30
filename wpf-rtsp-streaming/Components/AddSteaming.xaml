@@ -4,15 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:wpf_rtsp_streaming.Components"
-             xmlns:convert="clr-namespace:wpf_rtsp_streaming.Converts"
              mc:Ignorable="d" 
              Panel.ZIndex="100"
              d:DesignWidth="780" d:DesignHeight="391"
              d:Background="White">
 
-    <UserControl.Resources>
-        <convert:EmptyStringCheckConverter x:Key="EmptyStringCheckConverter"/>
-        
+    <UserControl.Resources>        
         <Style TargetType="Grid" x:Key="Container">
             <Setter Property="Width" Value="780"/>
             <Setter Property="Height" Value="391"/>
@@ -68,6 +65,9 @@
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="VerticalContentAlignment" Value="Top"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="AcceptsReturn" Value="True"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
         </Style>
 
         <Style TargetType="Button" x:Key="ButtonSelectFile">
@@ -162,11 +162,7 @@
                                 <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#cecece"/>
                             </Trigger>
 
-                            <DataTrigger Binding="{Binding Path=FilePath, Converter={StaticResource EmptyStringCheckConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Value="True">
-                                <Setter Property="IsEnabled" Value="False"/>
-                            </DataTrigger>
-                            
-                            <DataTrigger Binding="{Binding Path=RTSPPath, Converter={StaticResource EmptyStringCheckConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Value="True">
+                            <DataTrigger Binding="{Binding Path=IsSaveEnabled, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" Value="False">
                                 <Setter Property="IsEnabled" Value="False"/>
                             </DataTrigger>
                         </ControlTemplate.Triggers>
@@ -272,12 +268,9 @@
                         </Button>
                     </Grid>
 
-                    <TextBox>
+                    <TextBox KeyUp="TextBoxFilePath_KeyUp">
                         <TextBox.Resources>
                             <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxText}">
-                                <Setter Property="TextWrapping" Value="Wrap"/>
-                                <Setter Property="AcceptsReturn" Value="True"/>
-                                <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
                                 <Setter Property="IsReadOnly" Value="True"/>
                                 <Setter Property="Text" Value="{Binding Path=FilePath, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"/>
                             </Style>
@@ -293,12 +286,9 @@
                         </Label.Resources>
                     </Label>
 
-                    <TextBox>
+                    <TextBox KeyUp="TextBoxRTSPPath_KeyUp">
                         <TextBox.Resources>
                             <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxText}">
-                                <Setter Property="TextWrapping" Value="Wrap"/>
-                                <Setter Property="AcceptsReturn" Value="True"/>
-                                <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
                                 <Setter Property="Text" Value="{Binding Path=RTSPPath, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"/>
                             </Style>
                         </TextBox.Resources>

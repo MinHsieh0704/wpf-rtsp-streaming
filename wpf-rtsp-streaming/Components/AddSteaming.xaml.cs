@@ -2,6 +2,7 @@
 using Min_Helpers;
 using Min_Helpers.PrintHelper;
 using System;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -171,6 +172,14 @@ namespace wpf_rtsp_streaming.Components
                 if (element == null)
                 {
                     return;
+                }
+
+                if (element.Text.Length == 1)
+                {
+                    if (Regex.IsMatch(element.Text, "^/"))
+                    {
+                        element.Text = "";
+                    }
                 }
 
                 this.IsSaveEnabled = !string.IsNullOrEmpty(element.Text) && !string.IsNullOrEmpty(this.FilePath);

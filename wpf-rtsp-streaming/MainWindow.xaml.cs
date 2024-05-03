@@ -99,7 +99,7 @@ namespace wpf_rtsp_streaming
                         {
                             this.Dispatcher.Invoke(new Action(() =>
                             {
-                                App.PrintService.Log($"Mediamtx [{App.Mediamtx.processId}], {x}", Print.EMode.message);
+                                App.PrintService.Log($"Mediamtx [{App.Mediamtx.processId}], {x}", Print.EMode.message, "Mediamtx");
                             }));
                         });
                         App.Mediamtx.onError.Subscribe((x) =>
@@ -111,7 +111,7 @@ namespace wpf_rtsp_streaming
                                 x = ExceptionHelper.GetReal(x);
                                 string message = x.Message;
 
-                                App.PrintService.Log($"Mediamtx [{App.Mediamtx.processId}], {message}", Print.EMode.error);
+                                App.PrintService.Log($"Mediamtx [{App.Mediamtx.processId}], {message}", Print.EMode.error, "Mediamtx");
 
                                 MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
                             }));
@@ -385,7 +385,7 @@ namespace wpf_rtsp_streaming
                 {
                     this.Dispatcher.Invoke(new Action(() =>
                     {
-                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {x}", Print.EMode.message);
+                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {x}", Print.EMode.message, $"Streaming_{streamingInfo.RTSPPath}");
                     }));
                 });
                 streaming.onError.Subscribe((x) =>
@@ -397,7 +397,7 @@ namespace wpf_rtsp_streaming
                         x = ExceptionHelper.GetReal(x);
                         string message = x.Message;
 
-                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.error);
+                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.error, $"Streaming_{streamingInfo.RTSPPath}");
 
                         MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
                     }));

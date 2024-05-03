@@ -264,7 +264,7 @@ namespace wpf_rtsp_streaming.Helpers
                     }
                     else
                     {
-                        this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -o - \"{this.filePath}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/{this.rtspPath}");
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --no-playlist -o - \"{this.filePath}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/{this.rtspPath}");
                     }
                 }
 

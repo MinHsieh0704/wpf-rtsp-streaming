@@ -183,14 +183,20 @@ namespace wpf_rtsp_streaming.Helpers
 
                                     this.Disconnect();
 
-                                    formatCheckTaskCompletionSource.SetResult(true);
+                                    if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
+                                    {
+                                        formatCheckTaskCompletionSource.SetResult(true);
+                                    }
                                 }
                             }
                             else
                             {
                                 if (Regex.IsMatch(message, "Extracting URL: ", RegexOptions.IgnoreCase))
                                 {
-                                    taskCompletionSource.SetResult(true);
+                                    if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                                    {
+                                        taskCompletionSource.SetResult(true);
+                                    }
                                 }
                             }
                         }
@@ -202,8 +208,14 @@ namespace wpf_rtsp_streaming.Helpers
                             string message = e.Data;
                             if (Regex.IsMatch(message, "fail|error", RegexOptions.IgnoreCase))
                             {
-                                formatCheckTaskCompletionSource.SetCanceled();
-                                taskCompletionSource.SetResult(true);
+                                if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
+                                {
+                                    formatCheckTaskCompletionSource.SetCanceled();
+                                }
+                                if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                                {
+                                    taskCompletionSource.SetResult(true);
+                                }
 
                                 this.onError.OnNext(new Exception(message));
                                 return;
@@ -219,14 +231,20 @@ namespace wpf_rtsp_streaming.Helpers
 
                                     this.Disconnect();
 
-                                    formatCheckTaskCompletionSource.SetResult(true);
+                                    if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
+                                    {
+                                        formatCheckTaskCompletionSource.SetResult(true);
+                                    }
                                 }
                             }
                             else
                             {
                                 if (Regex.IsMatch(message, "Extracting URL: ", RegexOptions.IgnoreCase))
                                 {
-                                    taskCompletionSource.SetResult(true);
+                                    if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                                    {
+                                        taskCompletionSource.SetResult(true);
+                                    }
                                 }
                             }
                         }

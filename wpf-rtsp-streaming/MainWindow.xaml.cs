@@ -252,25 +252,10 @@ namespace wpf_rtsp_streaming
 
                     item.IsStart = true;
 
-                    await Task.Run(new Action(() =>
+                    if (App.Streamings != null)
                     {
-                        try
-                        {
-                            if (App.Streamings != null)
-                            {
-                                App.Streamings[item.Index - 1].Connect();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            ex = ExceptionHelper.GetReal(ex);
-                            string message = ex.Message;
-
-                            App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
-
-                            MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }));
+                        await App.Streamings[item.Index - 1].Connect();
+                    }
                 }
 
                 this.Streaming.Items.Refresh();

@@ -87,9 +87,10 @@ namespace wpf_rtsp_streaming.Helpers
                 };
                 this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
-                    if (!string.IsNullOrEmpty(e.Data))
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
                     {
-                        this.onError.OnNext(new Exception(e.Data));
+                        this.onError.OnNext(new Exception(message));
                     }
                 };
 

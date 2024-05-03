@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace wpf_rtsp_streaming.Helpers
 {
@@ -53,13 +54,13 @@ namespace wpf_rtsp_streaming.Helpers
         /// <summary>
         /// Connect
         /// </summary>
-        public void Connect()
+        public async Task Connect()
         {
             try
             {
                 if (filePath.IndexOf("https://www.youtube.com") > -1)
                 {
-                    this.ConnectWithYoutube();
+                    await this.ConnectWithYoutube();
                 }
                 else
                 {
@@ -133,7 +134,7 @@ namespace wpf_rtsp_streaming.Helpers
         /// <summary>
         /// Connect With Youtube
         /// </summary>
-        private void ConnectWithYoutube()
+        private async Task ConnectWithYoutube()
         {
             try
             {
@@ -149,47 +150,110 @@ namespace wpf_rtsp_streaming.Helpers
                     throw new Exception($"Can not found {file}");
                 }
 
-                this.process = new Process();
-
-                this.process.StartInfo.FileName = "cmd.exe";
-                this.process.StartInfo.UseShellExecute = false;
-                this.process.StartInfo.RedirectStandardOutput = true;
-                this.process.StartInfo.RedirectStandardError = true;
-                this.process.StartInfo.RedirectStandardInput = true;
-                this.process.StartInfo.CreateNoWindow = true;
-                this.process.StartInfo.WorkingDirectory = $"{AppDomain.CurrentDomain.BaseDirectory}mediamtx";
-
-                this.process.EnableRaisingEvents = true;
-
-                this.process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+                TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+                for (int i = 0; i < 2; i++)
                 {
-                    if (!string.IsNullOrEmpty(e.Data))
+                    TaskCompletionSource<bool> formatCheckTaskCompletionSource = new TaskCompletionSource<bool>();
+
+                    this.process = new Process();
+
+                    this.process.StartInfo.FileName = "cmd.exe";
+                    this.process.StartInfo.UseShellExecute = false;
+                    this.process.StartInfo.RedirectStandardOutput = true;
+                    this.process.StartInfo.RedirectStandardError = true;
+                    this.process.StartInfo.RedirectStandardInput = true;
+                    this.process.StartInfo.CreateNoWindow = true;
+                    this.process.StartInfo.WorkingDirectory = $"{AppDomain.CurrentDomain.BaseDirectory}mediamtx";
+
+                    this.process.EnableRaisingEvents = true;
+
+                    this.process.OutputDataReceived += async (object sender, DataReceivedEventArgs e) =>
                     {
-                        this.onMessage.OnNext(e.Data);
-                    }
-                };
-                this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
-                {
-                    if (!string.IsNullOrEmpty(e.Data))
-                    {
-                        string message = e.Data;
-                        if (Regex.IsMatch(message.ToLower(), "fail|error", RegexOptions.IgnoreCase))
+                        if (!string.IsNullOrEmpty(e.Data))
                         {
-                            this.onError.OnNext(new Exception(message));
-                            return;
+                            string message = e.Data;
+
+                            this.onMessage.OnNext(message);
+
+                            if (i == 0)
+                            {
+                                if (Regex.IsMatch(message, "Available formats for ", RegexOptions.IgnoreCase))
+                                {
+                                    await Task.Delay(500);
+
+                                    this.Disconnect();
+
+                                    formatCheckTaskCompletionSource.SetResult(true);
+                                }
+                            }
+                            else
+                            {
+                                if (Regex.IsMatch(message, "Extracting URL: ", RegexOptions.IgnoreCase))
+                                {
+                                    taskCompletionSource.SetResult(true);
+                                }
+                            }
                         }
+                    };
+                    this.process.ErrorDataReceived += async (object sender, DataReceivedEventArgs e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            string message = e.Data;
+                            if (Regex.IsMatch(message, "fail|error", RegexOptions.IgnoreCase))
+                            {
+                                formatCheckTaskCompletionSource.SetCanceled();
+                                taskCompletionSource.SetResult(true);
 
-                        this.onMessage.OnNext(e.Data);
+                                this.onError.OnNext(new Exception(message));
+                                return;
+                            }
+
+                            this.onMessage.OnNext(message);
+
+                            if (i == 0)
+                            {
+                                if (Regex.IsMatch(message, "Available formats for ", RegexOptions.IgnoreCase))
+                                {
+                                    await Task.Delay(500);
+
+                                    this.Disconnect();
+
+                                    formatCheckTaskCompletionSource.SetResult(true);
+                                }
+                            }
+                            else
+                            {
+                                if (Regex.IsMatch(message, "Extracting URL: ", RegexOptions.IgnoreCase))
+                                {
+                                    taskCompletionSource.SetResult(true);
+                                }
+                            }
+                        }
+                    };
+
+                    this.process.Start();
+                    this.processId = this.process.Id;
+
+                    this.process.BeginOutputReadLine();
+                    this.process.BeginErrorReadLine();
+
+                    if (i == 0)
+                    {
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -F \"{this.filePath}\"");
+
+                        await formatCheckTaskCompletionSource.Task;
                     }
-                };
+                    else
+                    {
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -o - \"{this.filePath}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/{this.rtspPath}");
+                    }
+                }
 
-                this.process.Start();
-                this.processId = this.process.Id;
-
-                this.process.BeginOutputReadLine();
-                this.process.BeginErrorReadLine();
-
-                this.process.StandardInput.WriteLine($"yt-dlp.exe -o - \"{this.filePath}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/{this.rtspPath}");
+                await taskCompletionSource.Task;
+            }
+            catch (OperationCanceledException e)
+            {
             }
             catch (Exception ex)
             {

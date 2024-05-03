@@ -150,6 +150,8 @@ namespace wpf_rtsp_streaming.Helpers
                     throw new Exception($"Can not found {file}");
                 }
 
+                bool isDownloadCompleted = false;
+
                 TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
                 for (int i = 0; i < 2; i++)
                 {
@@ -198,6 +200,10 @@ namespace wpf_rtsp_streaming.Helpers
                                         taskCompletionSource.SetResult(true);
                                     }
                                 }
+                                else if (Regex.IsMatch(message, "\\[download\\] 100%", RegexOptions.IgnoreCase))
+                                {
+                                    isDownloadCompleted = true;
+                                }
                             }
                         }
                     };
@@ -208,6 +214,13 @@ namespace wpf_rtsp_streaming.Helpers
                             string message = e.Data;
                             if (Regex.IsMatch(message, "fail|error", RegexOptions.IgnoreCase))
                             {
+                                if (isDownloadCompleted && Regex.IsMatch(message, "Error during demuxing: Function not implemented", RegexOptions.IgnoreCase))
+                                {
+                                    this.Disconnect();
+                                    await this.Connect();
+                                    return;
+                                }
+
                                 if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
                                 {
                                     formatCheckTaskCompletionSource.SetCanceled();
@@ -245,6 +258,10 @@ namespace wpf_rtsp_streaming.Helpers
                                     {
                                         taskCompletionSource.SetResult(true);
                                     }
+                                }
+                                else if (Regex.IsMatch(message, "\\[download\\] 100%", RegexOptions.IgnoreCase))
+                                {
+                                    isDownloadCompleted = true;
                                 }
                             }
                         }

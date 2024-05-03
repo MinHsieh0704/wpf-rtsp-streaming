@@ -174,12 +174,9 @@ namespace wpf_rtsp_streaming.Components
                     return;
                 }
 
-                if (element.Text.Length == 1)
+                if (Regex.IsMatch(element.Text, "^/"))
                 {
-                    if (Regex.IsMatch(element.Text, "^/"))
-                    {
-                        element.Text = "";
-                    }
+                    element.Text = Regex.Replace(element.Text, "^/+", "");
                 }
 
                 this.IsSaveEnabled = !string.IsNullOrEmpty(element.Text) && !string.IsNullOrEmpty(this.FilePath);

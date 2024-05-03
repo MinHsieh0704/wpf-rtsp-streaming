@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -62,6 +63,17 @@ namespace wpf_rtsp_streaming
             }
         }
 
+        private static FileInfo _pidFile = new FileInfo($"{App.CommonPath}\\pid");
+        public static FileInfo PIDFile
+        {
+            get
+            {
+                _pidFile.Refresh();
+
+                return _pidFile;
+            }
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en");
@@ -98,6 +110,8 @@ namespace wpf_rtsp_streaming
                 LogService.Write("");
                 PrintService.Log("App, Start", Print.EMode.info);
 
+                App.DeletePID();
+
                 DataCenter.DataCenter.StreamingInfo.FilePath = StreamingFile.FullName;
                 DataCenter.DataCenter.StreamingInfo.Read();
 
@@ -108,7 +122,7 @@ namespace wpf_rtsp_streaming
             catch (Exception ex)
             {
                 ex = ExceptionHelper.GetReal(ex);
-                PrintService.Log($"App, Error, {ex.Message}", Print.EMode.info);
+                PrintService.Log($"App, Error, {ex.Message}", Print.EMode.error);
 
                 App.Current.Shutdown(1);
             }
@@ -127,6 +141,8 @@ namespace wpf_rtsp_streaming
             {
                 App.Mediamtx.Dispose();
             }
+
+            App.WritePID();
 
             App.LogExpiredStop.OnNext(true);
 
@@ -192,6 +208,109 @@ namespace wpf_rtsp_streaming
                     }))
                     .Concat()
                     .Subscribe();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private static void DeletePID()
+        {
+            try
+            {
+                if (!File.Exists(App.PIDFile.FullName))
+                {
+                    return;
+                }
+
+                using (FileStream fileStream = new FileStream(App.PIDFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    using (StreamReader reader = new StreamReader(fileStream))
+                    {
+                        string pidInformationString = reader.ReadToEnd();
+                        if (!string.IsNullOrEmpty(pidInformationString))
+                        {
+                            string[] pidInformations = Regex.Split(pidInformationString, "(\r)?\n");
+                            foreach (string _pidInformation in pidInformations)
+                            {
+                                if (!string.IsNullOrEmpty(_pidInformation))
+                                {
+                                    string[] __pidInformations = _pidInformation.Split(',');
+
+                                    string processName = __pidInformations[0];
+                                    int processId = Convert.ToInt32(__pidInformations[1]);
+
+                                    Process[] processes = Process.GetProcesses();
+                                    Process process = processes.Where((n) => n.ProcessName == processName).Where((n) => n.Id == processId).FirstOrDefault();
+                                    if (process == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    Community.KillChildProcess(process.Id);
+
+                                    if (!process.HasExited) process.Kill();
+                                    process.Close();
+                                    process.Dispose();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                App.WritePID();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public static void WritePID()
+        {
+            try
+            {
+                using (FileStream fileStream = new FileStream(App.PIDFile.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    using (StreamWriter writer = new StreamWriter(fileStream))
+                    {
+                        List<string> pidInformations = new List<string>();
+                        if (App.Streamings != null)
+                        {
+                            foreach (var streaming in App.Streamings)
+                            {
+                                if (streaming.processId == -1)
+                                {
+                                    continue;
+                                }
+
+                                if (streaming.filePath.IndexOf("https://www.youtube.com") > -1)
+                                {
+                                    pidInformations.Add($"cmd,{streaming.processId}");
+                                }
+                                else
+                                {
+                                    pidInformations.Add($"ffmpeg,{streaming.processId}");
+                                }
+                            }
+                        }
+                        if (App.Mediamtx != null)
+                        {
+                            if (App.Mediamtx.processId != -1)
+                            {
+                                pidInformations.Add($"mediamtx,{App.Mediamtx.processId}");
+                            }
+                        }
+
+                        if (pidInformations.Count > 0)
+                        {
+                            string pidInformationString = string.Join("\n", pidInformations.ToArray());
+
+                            writer.Write(pidInformationString);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {

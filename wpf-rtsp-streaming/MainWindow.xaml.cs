@@ -137,6 +137,8 @@ namespace wpf_rtsp_streaming
                 }
 
                 this.IsStart = true;
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -158,6 +160,8 @@ namespace wpf_rtsp_streaming
             try
             {
                 this.StopMediamtx();
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -183,6 +187,8 @@ namespace wpf_rtsp_streaming
                 DataCenter.DataCenter.StreamingInfo.Add(streamingInfo);
 
                 this.InitStreaming(streamingInfo);
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -268,6 +274,8 @@ namespace wpf_rtsp_streaming
                 }
 
                 this.Streaming.Items.Refresh();
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -301,6 +309,8 @@ namespace wpf_rtsp_streaming
                 }
 
                 this.StopStreaming(streamingInfo);
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -336,6 +346,8 @@ namespace wpf_rtsp_streaming
                     Streaming streaming = App.Streamings.Where((n) => n.rtspPath == streamingInfo.RTSPPath).FirstOrDefault();
                     App.Streamings.Remove(streaming);
                 }
+
+                App.WritePID();
             }
             catch (Exception ex)
             {

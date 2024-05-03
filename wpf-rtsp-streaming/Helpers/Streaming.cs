@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Management;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 
@@ -11,7 +10,7 @@ namespace wpf_rtsp_streaming.Helpers
     {
         private Process process { get; set; }
 
-        public int processId { get; private set; }
+        public int processId { get; private set; } = -1;
 
         public Subject<string> onMessage { get; } = new Subject<string>();
 
@@ -198,33 +197,6 @@ namespace wpf_rtsp_streaming.Helpers
             }
         }
 
-
-        /// <summary>
-        /// Kill Child Process
-        /// </summary>
-        /// <param name="processId"></param>
-        private void KillChildProcess(int processId)
-        {
-            try
-            {
-                ManagementObjectSearcher managementSearcher = new ManagementObjectSearcher(String.Format("Select * From Win32_Process Where ParentProcessID={0}", processId));
-                foreach (ManagementObject managementObject in managementSearcher.Get())
-                {
-                    Process process = Process.GetProcessById(Convert.ToInt32(managementObject["ProcessID"]));
-
-                    this.KillChildProcess(process.Id);
-
-                    if (!process.HasExited) process.Kill();
-                    process.Close();
-                    process.Dispose();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-
         /// <summary>
         /// Disconnect
         /// </summary>
@@ -237,13 +209,14 @@ namespace wpf_rtsp_streaming.Helpers
                     this.process.CancelOutputRead();
                     this.process.CancelErrorRead();
 
-                    this.KillChildProcess(this.process.Id);
+                    Community.KillChildProcess(this.process.Id);
 
                     if (!this.process.HasExited) this.process.Kill();
                     this.process.Close();
                     this.process.Dispose();
 
                     this.process = null;
+                    this.processId = -1;
                 }
             }
             catch (Exception ex)

@@ -10,7 +10,7 @@ namespace wpf_rtsp_streaming.Helpers
     {
         private Process process { get; set; }
 
-        public int processId { get; private set; }
+        public int processId { get; private set; } = -1;
 
         public Subject<string> onMessage { get; } = new Subject<string>();
 
@@ -122,6 +122,7 @@ namespace wpf_rtsp_streaming.Helpers
                     this.process.Dispose();
 
                     this.process = null;
+                    this.processId = -1;
                 }
             }
             catch (Exception ex)

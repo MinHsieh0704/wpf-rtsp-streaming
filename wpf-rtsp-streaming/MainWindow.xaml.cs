@@ -391,7 +391,7 @@ namespace wpf_rtsp_streaming
                 {
                     this.Dispatcher.Invoke(new Action(() =>
                     {
-                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {x}", Print.EMode.message, $"Streaming_{streamingInfo.RTSPPath}");
+                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {x}", Print.EMode.message, $"Streaming_{streamingInfo.RTSPPath.Replace("/", "_")}");
                     }));
                 });
                 streaming.onError.Subscribe((x) =>
@@ -403,7 +403,7 @@ namespace wpf_rtsp_streaming
                         x = ExceptionHelper.GetReal(x);
                         string message = x.Message;
 
-                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.error, $"Streaming_{streamingInfo.RTSPPath}");
+                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.error, $"Streaming_{streamingInfo.RTSPPath.Replace("/", "_")}");
 
                         MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
                     }));

@@ -10,7 +10,7 @@ namespace wpf_rtsp_streaming.Helpers
     {
         private Process process { get; set; }
 
-        public int processId { get; private set; }
+        public int processId { get; private set; } = -1;
 
         public Subject<string> onMessage { get; } = new Subject<string>();
 
@@ -73,9 +73,10 @@ namespace wpf_rtsp_streaming.Helpers
 
                 this.process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
+                    string message = e.Data;
                     if (!string.IsNullOrEmpty(e.Data))
                     {
-                        string message = Regex.Replace(e.Data, "^[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ", "");
+                        message = Regex.Replace(message, "^[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ", "");
                         if (Regex.IsMatch(message, "^ERR"))
                         {
                             this.onError.OnNext(new Exception(message));
@@ -87,9 +88,10 @@ namespace wpf_rtsp_streaming.Helpers
                 };
                 this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
-                    if (!string.IsNullOrEmpty(e.Data))
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
                     {
-                        this.onError.OnNext(new Exception(e.Data));
+                        this.onError.OnNext(new Exception(message));
                     }
                 };
 
@@ -122,6 +124,7 @@ namespace wpf_rtsp_streaming.Helpers
                     this.process.Dispose();
 
                     this.process = null;
+                    this.processId = -1;
                 }
             }
             catch (Exception ex)

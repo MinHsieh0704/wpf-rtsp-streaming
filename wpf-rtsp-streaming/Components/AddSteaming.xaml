@@ -6,16 +6,14 @@
              xmlns:local="clr-namespace:wpf_rtsp_streaming.Components"
              mc:Ignorable="d" 
              Panel.ZIndex="100"
-             d:DesignWidth="780" d:DesignHeight="391"
+             d:DesignWidth="780" d:DesignHeight="421"
              d:Background="White">
 
-    <UserControl.Resources>        
+    <UserControl.Resources>
         <Style TargetType="Grid" x:Key="Container">
-            <Setter Property="Width" Value="780"/>
-            <Setter Property="Height" Value="391"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
         </Style>
-        
+
         <Style TargetType="Grid" x:Key="Mask">
             <Setter Property="Background" Value="#ffffff"/>
             <Setter Property="Opacity" Value="0.7"/>
@@ -23,10 +21,11 @@
 
         <Style TargetType="Border" x:Key="BorderForm">
             <Setter Property="Width" Value="250"/>
-            <Setter Property="Height" Value="344"/>
+            <Setter Property="Height" Value="374"/>
             <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="8 4 8 4"/>
-            <Setter Property="Background" Value="#fff"/>
+            <Setter Property="Padding" Value="8 0 8 0"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Background" Value="#ffffff"/>
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect ShadowDepth="2" Color="#32323340"/>
@@ -39,9 +38,16 @@
             <Setter Property="Foreground" Value="#006ab7"/>
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="-6 0 0 0"/>
             <Setter Property="VerticalAlignment" Value="Top"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="TextBlockInformation">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Foreground" Value="#006ab7"/>
+            <Setter Property="FontSize" Value="12"/>
         </Style>
         
         <Style TargetType="Border" x:Key="BorderDivider">
@@ -268,10 +274,19 @@
                         </Button>
                     </Grid>
 
+                    <TextBlock>
+                        <TextBlock.Resources>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockInformation}">
+                                <Setter Property="Text" Value="Please Input Youtube url or file absolute path or use select file button."/>
+                                <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+                            </Style>
+                        </TextBlock.Resources>
+                    </TextBlock>
+
                     <TextBox KeyUp="TextBoxFilePath_KeyUp">
                         <TextBox.Resources>
                             <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxText}">
-                                <Setter Property="IsReadOnly" Value="True"/>
+                                <Setter Property="Margin" Value="0 8 0 0"/>
                                 <Setter Property="Text" Value="{Binding Path=FilePath, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"/>
                             </Style>
                         </TextBox.Resources>
@@ -281,7 +296,7 @@
                         <Label.Resources>
                             <Style TargetType="Label" BasedOn="{StaticResource LabelTitle}">
                                 <Setter Property="Content" Value="RTSP Path"/>
-                                <Setter Property="Margin" Value="0 8 0 0"/>
+                                <Setter Property="Margin" Value="-6 8 0 0"/>
                             </Style>
                         </Label.Resources>
                     </Label>

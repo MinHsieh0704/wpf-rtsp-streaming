@@ -89,6 +89,12 @@ namespace wpf_rtsp_streaming
             {
                 this.IsShowLoading = true;
 
+                FirewallRule firewallRule = new FirewallRule();
+                if (await firewallRule.Search($"{App.AppName}_{App.RTSPPort}"))
+                {
+                    await firewallRule.Add($"{App.AppName}_{App.RTSPPort}", App.RTSPPort);
+                }
+
                 await Task.Run(new Action(() =>
                 {
                     try
@@ -97,24 +103,36 @@ namespace wpf_rtsp_streaming
 
                         App.Mediamtx.onMessage.Subscribe((x) =>
                         {
-                            this.Dispatcher.Invoke(new Action(() =>
+                            try
                             {
-                                App.PrintService.Log($"Mediamtx [{App.Mediamtx.processId}], {x}", Print.EMode.message);
-                            }));
+                                this.Dispatcher.Invoke(new Action(() =>
+                                {
+                                    App.PrintService.Log($"Mediamtx [{App.Mediamtx.processId}], {x}", Print.EMode.message, "Mediamtx");
+                                }));
+                            }
+                            catch (TaskCanceledException ex)
+                            {
+                            }
                         });
                         App.Mediamtx.onError.Subscribe((x) =>
                         {
-                            this.Dispatcher.Invoke(new Action(() =>
+                            try
                             {
-                                this.StopMediamtx();
+                                this.Dispatcher.Invoke(new Action(() =>
+                                {
+                                    this.StopMediamtx();
 
-                                x = ExceptionHelper.GetReal(x);
-                                string message = x.Message;
+                                    x = ExceptionHelper.GetReal(x);
+                                    string message = x.Message;
 
-                                App.PrintService.Log($"Mediamtx [{App.Mediamtx.processId}], {message}", Print.EMode.error);
+                                    App.PrintService.Log($"Mediamtx [{App.Mediamtx.processId}], {message}", Print.EMode.error, "Mediamtx");
 
-                                MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
-                            }));
+                                    MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+                                }));
+                            }
+                            catch (TaskCanceledException ex)
+                            {
+                            }
                         });
 
                         App.Mediamtx.Connect();
@@ -137,6 +155,8 @@ namespace wpf_rtsp_streaming
                 }
 
                 this.IsStart = true;
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -158,6 +178,8 @@ namespace wpf_rtsp_streaming
             try
             {
                 this.StopMediamtx();
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -183,6 +205,8 @@ namespace wpf_rtsp_streaming
                 DataCenter.DataCenter.StreamingInfo.Add(streamingInfo);
 
                 this.InitStreaming(streamingInfo);
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -246,28 +270,15 @@ namespace wpf_rtsp_streaming
 
                     item.IsStart = true;
 
-                    await Task.Run(new Action(() =>
+                    if (App.Streamings != null)
                     {
-                        try
-                        {
-                            if (App.Streamings != null)
-                            {
-                                App.Streamings[item.Index - 1].Connect();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            ex = ExceptionHelper.GetReal(ex);
-                            string message = ex.Message;
-
-                            App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
-
-                            MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }));
+                        await App.Streamings[item.Index - 1].Connect();
+                    }
                 }
 
                 this.Streaming.Items.Refresh();
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -301,6 +312,8 @@ namespace wpf_rtsp_streaming
                 }
 
                 this.StopStreaming(streamingInfo);
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -336,6 +349,8 @@ namespace wpf_rtsp_streaming
                     Streaming streaming = App.Streamings.Where((n) => n.rtspPath == streamingInfo.RTSPPath).FirstOrDefault();
                     App.Streamings.Remove(streaming);
                 }
+
+                App.WritePID();
             }
             catch (Exception ex)
             {
@@ -386,24 +401,37 @@ namespace wpf_rtsp_streaming
 
                 streaming.onMessage.Subscribe((x) =>
                 {
-                    this.Dispatcher.Invoke(new Action(() =>
+                    try
                     {
-                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {x}", Print.EMode.message);
-                    }));
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {x}", Print.EMode.message, $"Streaming_{streamingInfo.RTSPPath.Replace("/", "_")}");
+                        }));
+                    }
+                    catch (TaskCanceledException ex)
+                    {
+                    }
                 });
                 streaming.onError.Subscribe((x) =>
                 {
-                    this.Dispatcher.Invoke(new Action(() =>
+                    try
                     {
-                        this.StopStreaming(streamingInfo);
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            this.StopStreaming(streamingInfo);
 
-                        x = ExceptionHelper.GetReal(x);
-                        string message = x.Message;
+                            x = ExceptionHelper.GetReal(x);
+                            string message = x.Message;
 
-                        App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.error);
+                            App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.error, $"Streaming_{streamingInfo.RTSPPath.Replace("/", "_")}");
 
-                        MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
-                    }));
+                            MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+
+                        }));
+                    }
+                    catch (TaskCanceledException ex)
+                    {
+                    }
                 });
 
                 if (App.Streamings != null)

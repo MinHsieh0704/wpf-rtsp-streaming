@@ -73,9 +73,10 @@ namespace wpf_rtsp_streaming.Helpers
 
                 this.process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
+                    string message = e.Data;
                     if (!string.IsNullOrEmpty(e.Data))
                     {
-                        string message = Regex.Replace(e.Data, "^[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ", "");
+                        message = Regex.Replace(message, "^[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ", "");
                         if (Regex.IsMatch(message, "^ERR"))
                         {
                             this.onError.OnNext(new Exception(message));

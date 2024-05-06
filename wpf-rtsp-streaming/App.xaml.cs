@@ -32,6 +32,7 @@ namespace wpf_rtsp_streaming
 
         public static string CommonPath { get; } = AppDomain.CurrentDomain.BaseDirectory;
         public static string AppName { get; } = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+        public static int RTSPPort { get; } = 8554;
 
         public static Mediamtx Mediamtx { get; set; }
         public static List<Streaming> Streamings { get; set; }

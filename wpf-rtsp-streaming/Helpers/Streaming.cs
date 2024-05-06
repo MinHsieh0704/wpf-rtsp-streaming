@@ -93,15 +93,16 @@ namespace wpf_rtsp_streaming.Helpers
                 this.process.StartInfo.RedirectStandardOutput = true;
                 this.process.StartInfo.RedirectStandardError = true;
                 this.process.StartInfo.CreateNoWindow = true;
-                this.process.StartInfo.Arguments = $"-re -stream_loop -1 -i \"{this.filePath}\" -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/{this.rtspPath}";
+                this.process.StartInfo.Arguments = $"-re -stream_loop -1 -i \"{this.filePath}\" -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}";
 
                 this.process.EnableRaisingEvents = true;
 
                 this.process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
-                    if (!string.IsNullOrEmpty(e.Data))
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
                     {
-                        this.onMessage.OnNext(e.Data);
+                        this.onMessage.OnNext(message);
                     }
                 };
                 this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
@@ -115,7 +116,7 @@ namespace wpf_rtsp_streaming.Helpers
                             return;
                         }
 
-                        this.onMessage.OnNext(e.Data);
+                        this.onMessage.OnNext(message);
                     }
                 };
 
@@ -171,10 +172,9 @@ namespace wpf_rtsp_streaming.Helpers
 
                     this.process.OutputDataReceived += async (object sender, DataReceivedEventArgs e) =>
                     {
-                        if (!string.IsNullOrEmpty(e.Data))
+                        string message = e.Data;
+                        if (!string.IsNullOrEmpty(message))
                         {
-                            string message = e.Data;
-
                             this.onMessage.OnNext(message);
 
                             if (i == 0)
@@ -209,9 +209,9 @@ namespace wpf_rtsp_streaming.Helpers
                     };
                     this.process.ErrorDataReceived += async (object sender, DataReceivedEventArgs e) =>
                     {
-                        if (!string.IsNullOrEmpty(e.Data))
+                        string message = e.Data;
+                        if (!string.IsNullOrEmpty(message))
                         {
-                            string message = e.Data;
                             if (Regex.IsMatch(message, "fail|error", RegexOptions.IgnoreCase))
                             {
                                 if (isDownloadCompleted && Regex.IsMatch(message, "Error during demuxing: Function not implemented", RegexOptions.IgnoreCase))
@@ -281,7 +281,7 @@ namespace wpf_rtsp_streaming.Helpers
                     }
                     else
                     {
-                        this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --no-playlist -o - \"{this.filePath}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:8554/{this.rtspPath}");
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --no-playlist -o - \"{this.filePath}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
                     }
                 }
 

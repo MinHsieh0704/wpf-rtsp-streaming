@@ -89,7 +89,7 @@ namespace wpf_rtsp_streaming.DataCenter
                                     Index = i + 1,
                                     FilePath = streaming.FilePath,
                                     RTSPPath = streaming.RTSPPath,
-                                    URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:8554/{streaming.RTSPPath}",
+                                    URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:{App.RTSPPort}/{streaming.RTSPPath}",
                                     IsStart = false,
                                 });
                             }
@@ -141,7 +141,7 @@ namespace wpf_rtsp_streaming.DataCenter
                 }
 
                 info.Index = this.StreamingInfos.Count() + 1;
-                info.URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:8554/{info.RTSPPath}";
+                info.URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:{App.RTSPPort}/{info.RTSPPath}";
 
                 this.StreamingInfos.Add(info);
 

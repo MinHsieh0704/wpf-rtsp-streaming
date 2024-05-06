@@ -89,10 +89,16 @@ namespace wpf_rtsp_streaming
             {
                 this.IsShowLoading = true;
 
-                await Task.Run(new Action(() =>
+                await Task.Run(new Action(async () =>
                 {
                     try
                     {
+                        FirewallRule firewallRule = new FirewallRule();
+                        if (await firewallRule.Search($"{App.AppName}_{App.RTSPPort}"))
+                        {
+                            await firewallRule.Add($"{App.AppName}_{App.RTSPPort}", App.RTSPPort);
+                        }
+
                         App.Mediamtx = new Mediamtx();
 
                         App.Mediamtx.onMessage.Subscribe((x) =>

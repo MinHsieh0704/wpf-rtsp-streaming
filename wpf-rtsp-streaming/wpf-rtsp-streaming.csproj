@@ -93,6 +93,7 @@
     <Compile Include="DataCenter\DataCenter.cs" />
     <Compile Include="DataCenter\StreamingInfo.cs" />
     <Compile Include="Helpers\Community.cs" />
+    <Compile Include="Helpers\FirewallRule.cs" />
     <Compile Include="Helpers\Mediamtx.cs" />
     <Compile Include="Helpers\Streaming.cs" />
     <Compile Include="MainWindow.xaml.cs">

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace wpf_rtsp_streaming.Helpers
 {
@@ -151,6 +153,25 @@ namespace wpf_rtsp_streaming.Helpers
                     throw new Exception($"Can not found {file}");
                 }
 
+                Uri uri = new Uri(this.filePath);
+                NameValueCollection query = HttpUtility.ParseQueryString(uri.Query);
+
+                string url = null;
+                foreach (var key in query)
+                {
+                    if (key.ToString() != "v")
+                    {
+                        continue;
+                    }
+
+                    url = $"{uri.AbsoluteUri.Replace(uri.Query, "")}?{key}={query[key.ToString()]}";
+                    break;
+                }
+                if (url == null)
+                {
+                    throw new Exception("Youtube url lose some query parameter");
+                }
+
                 bool isDownloadCompleted = false;
 
                 TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
@@ -282,13 +303,13 @@ namespace wpf_rtsp_streaming.Helpers
 
                     if (i == 0)
                     {
-                        this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -F \"{this.filePath}\"");
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -F \"{url}\"");
 
                         await formatCheckTaskCompletionSource.Task;
                     }
                     else
                     {
-                        this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --no-playlist -o - \"{this.filePath}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --no-playlist -o - \"{url}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
                     }
                 }
 

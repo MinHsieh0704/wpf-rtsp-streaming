@@ -221,6 +221,13 @@ namespace wpf_rtsp_streaming.Helpers
                                     return;
                                 }
 
+                                if (Regex.IsMatch(message, "\\[download\\] Got error: ", RegexOptions.IgnoreCase))
+                                {
+                                    this.Disconnect();
+                                    await this.Connect();
+                                    return;
+                                }
+
                                 if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
                                 {
                                     formatCheckTaskCompletionSource.SetCanceled();

@@ -1,0 +1,135 @@
+﻿<Window x:Class="wpf_rtsp_streaming.Startup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:wpf_rtsp_streaming"
+             mc:Ignorable="d" 
+             ResizeMode="NoResize"
+             WindowStyle="None"
+             WindowStartupLocation="CenterScreen"
+             Width="260" Height="230"
+             ContentRendered="Window_ContentRendered">
+
+    <Window.Resources>
+        <Style TargetType="Grid" x:Key="Container">
+            <Setter Property="Background" Value="#ffffff"/>
+        </Style>
+
+        <Style TargetType="UserControl" x:Key="UserControlIcon">
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="Height" Value="200"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Viewbox>
+                            <Viewbox.Resources>
+                                <Style TargetType="Viewbox">
+                                    <Setter Property="Width" Value="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"/>
+                                    <Setter Property="Height" Value="{Binding Path=ActualHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"/>
+                                    <Setter Property="Stretch" Value="Fill"/>
+                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                </Style>
+                            </Viewbox.Resources>
+
+                            <Grid>                                
+                                <Path>
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="512"/>
+                                            <Setter Property="Height" Value="512"/>
+                                            <Setter Property="Fill" Value="#ee3616"/>
+                                            <Setter Property="Data" Value="M1.000003,360.468658 C1.644630,359.617126 2.760666,359.333344 2.865015,358.836884 C5.560612,346.011200 11.106337,334.489990 18.991129,324.125000 C27.620354,312.781433 38.069767,303.573517 51.335865,297.878082 C54.635551,296.461426 58.135178,295.281250 61.039772,293.266907 C62.572968,292.203644 63.500591,289.668549 63.887379,287.642548 C68.227875,264.907074 77.997070,244.630249 92.116638,226.511337 C106.415894,208.161804 124.042549,193.599228 145.090469,183.536560 C159.855545,176.477615 175.290054,171.320099 191.762054,170.017197 C197.846603,169.535934 203.954498,169.349945 210.519974,169.554047 C210.994934,209.955338 211.001663,249.831863 210.690308,289.626953 C203.360474,285.390930 196.375504,281.190369 189.331055,277.092010 C176.794495,269.798370 165.023972,276.497925 165.008041,290.951019 C164.976456,319.601135 164.979736,348.251312 165.006592,376.901428 C165.020218,391.448456 176.628876,398.220032 189.185486,391.023865 C196.397430,386.890717 203.566513,382.682800 210.817413,379.004517 C210.911224,409.279144 210.942520,439.057739 210.973801,468.836365 C174.156937,468.890930 137.339508,468.845581 100.523506,469.051331 C86.648804,469.128845 72.895676,469.162903 59.641472,464.055298 C39.203156,456.179291 22.941103,443.310120 12.634995,423.884491 C8.495676,416.082428 6.117547,407.347443 2.898249,399.052460 C2.677286,398.483124 2.124263,398.042694 1.362833,397.771149 C1.000000,385.645782 1.000000,373.291534 1.000003,360.468658z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+
+                                <Path>
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="512"/>
+                                            <Setter Property="Height" Value="512"/>
+                                            <Setter Property="Fill" Value="#cb0010"/>
+                                            <Setter Property="Data" Value="M211.008392,289.708405 C211.001663,249.831863 210.994934,209.955338 210.982056,169.620972 C231.860519,168.182907 251.564682,172.771713 270.789429,180.799408 C292.253998,189.762390 309.998657,203.646545 325.176941,220.805374 C341.839539,239.642227 352.740204,261.667999 357.920502,286.342072 C358.644989,289.792786 359.863220,289.914185 362.918365,289.611053 C379.282074,287.987274 395.425690,288.518768 410.987427,294.908325 C422.037292,299.445343 432.022797,305.694946 440.394684,314.021057 C452.545990,326.105988 461.245056,340.496155 464.944397,357.432129 C469.727448,379.329559 468.156738,400.879639 457.567841,420.741669 C443.794891,446.576111 422.261261,462.792297 393.072052,467.975433 C388.721832,468.747925 384.222656,468.955109 379.791992,468.959137 C323.830078,469.009979 267.868073,468.975494 211.439957,468.899567 C210.942520,439.057739 210.911224,409.279144 210.886230,378.857117 C210.892532,378.213745 211.045502,377.925201 211.388428,377.890808 C229.009796,367.607239 246.383240,357.513794 263.530151,347.049164 C273.426941,341.009155 274.141785,327.648193 264.589081,321.726501 C246.972168,310.805939 228.912338,300.599884 211.041595,289.998291 C211.046112,289.900513 211.008392,289.708405 211.008392,289.708405 z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+
+                                <Path>
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="512"/>
+                                            <Setter Property="Height" Value="512"/>
+                                            <Setter Property="Fill" Value="#0c3f60"/>
+                                            <Setter Property="Data" Value="M513.000000,176.533142 C511.655792,177.845383 510.137970,178.503983 508.995239,179.566101 C500.944519,187.048950 488.819946,185.242981 483.752899,175.380585 C467.246674,143.253052 444.888641,115.669632 418.568878,91.190361 C412.649261,85.684738 406.148834,80.765999 399.662476,75.915863 C389.193634,68.087807 387.710785,57.460827 396.242584,49.258415 C400.588165,45.080635 410.449188,44.329151 415.689789,48.419483 C424.032471,54.931026 432.371613,61.521072 440.089813,68.743103 C455.344116,83.016678 470.304260,97.698090 482.260376,114.927711 C491.976685,128.929565 500.765259,143.574936 509.982941,157.923569 C510.679504,159.007858 511.517181,160.001465 512.644653,161.018616 C513.000000,166.022095 513.000000,171.044189 513.000000,176.533142 z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+
+                                <Path>
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="512"/>
+                                            <Setter Property="Height" Value="512"/>
+                                            <Setter Property="Fill" Value="#0c3f60"/>
+                                            <Setter Property="Data" Value="M424.329681,138.639618 C436.196777,151.929245 445.926605,166.291473 454.201019,181.622833 C458.246124,189.117828 455.664795,198.071747 448.822235,202.056732 C441.278137,206.450287 432.424072,204.375900 427.452576,197.045990 C419.941895,185.972382 413.242432,174.221939 404.710114,164.001450 C395.093445,152.482040 384.237091,141.891281 373.140656,131.749237 C365.193573,124.485657 361.747192,117.122131 365.070953,109.745514 C369.515503,99.881424 382.453949,98.034271 388.694000,103.646439 C400.974365,114.691132 412.366852,126.722969 424.329681,138.639618 z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+
+                                <Path>
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="512"/>
+                                            <Setter Property="Height" Value="512"/>
+                                            <Setter Property="Fill" Value="#0c3f60"/>
+                                            <Setter Property="Data" Value="M360.810181,158.951340 C375.008820,171.616791 386.989075,185.726212 396.322418,201.903229 C400.509308,209.160141 397.533173,218.260910 390.548431,222.169052 C383.291229,226.229660 374.504730,223.771500 369.449097,217.241058 C360.646484,205.870560 351.589905,194.672836 342.155579,183.823792 C336.123962,176.887726 334.920563,169.375168 339.851501,162.277542 C343.265747,157.363007 351.724731,154.443756 360.810181,158.951340 z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+
+                                <Path>
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="512"/>
+                                            <Setter Property="Height" Value="512"/>
+                                            <Setter Property="Fill" Value="#e0f3fd"/>
+                                            <Setter Property="Data" Value="M211.045502,377.925201 C211.045502,377.925201 210.892532,378.213745 210.823715,378.361145 C203.566513,382.682800 196.397430,386.890717 189.185486,391.023865 C176.628876,398.220032 165.020218,391.448456 165.006592,376.901428 C164.979736,348.251312 164.976456,319.601135 165.008041,290.951019 C165.023972,276.497925 176.794495,269.798370 189.331055,277.092010 C196.375504,281.190369 203.360474,285.390930 210.690308,289.626953 C211.008392,289.708405 211.046112,289.900513 211.027206,290.459534 C211.020691,319.987427 211.033096,348.956329 211.045502,377.925201 z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+                                
+                                <Path>
+                                    <Path.Resources>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Width" Value="512"/>
+                                            <Setter Property="Height" Value="512"/>
+                                            <Setter Property="Fill" Value="#bcdbfd"/>
+                                            <Setter Property="Data" Value="M211.388428,377.890808 C211.033096,348.956329 211.020691,319.987427 211.022675,290.557312 C228.912338,300.599884 246.972168,310.805939 264.589081,321.726501 C274.141785,327.648193 273.426941,341.009155 263.530151,347.049164 C246.383240,357.513794 229.009796,367.607239 211.388428,377.890808 z"/>
+                                        </Style>
+                                    </Path.Resources>
+                                </Path>
+                            </Grid>
+                        </Viewbox>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.Resources>
+            <Style TargetType="Grid" BasedOn="{StaticResource Container}">
+            </Style>
+        </Grid.Resources>
+
+        <UserControl>
+            <UserControl.Resources>
+                <Style TargetType="UserControl" BasedOn="{StaticResource UserControlIcon}">
+                </Style>
+            </UserControl.Resources>
+        </UserControl>
+    </Grid>
+</Window>

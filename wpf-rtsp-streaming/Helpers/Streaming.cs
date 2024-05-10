@@ -249,6 +249,13 @@ namespace wpf_rtsp_streaming.Helpers
                                     return;
                                 }
 
+                                if (Regex.IsMatch(message, "submitting a packet to the muxer: Broken pipe", RegexOptions.IgnoreCase))
+                                {
+                                    this.Disconnect();
+                                    await this.Connect();
+                                    return;
+                                }
+
                                 if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
                                 {
                                     formatCheckTaskCompletionSource.SetCanceled();

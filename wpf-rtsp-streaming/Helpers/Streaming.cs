@@ -237,6 +237,8 @@ namespace wpf_rtsp_streaming.Helpers
                             {
                                 if (isDownloadCompleted && Regex.IsMatch(message, "Error during demuxing: Function not implemented", RegexOptions.IgnoreCase))
                                 {
+                                    this.onMessage.OnNext(message);
+
                                     this.Disconnect();
                                     await this.Connect();
                                     return;
@@ -244,6 +246,8 @@ namespace wpf_rtsp_streaming.Helpers
 
                                 if (Regex.IsMatch(message, "\\[download\\] Got error: ", RegexOptions.IgnoreCase))
                                 {
+                                    this.onMessage.OnNext(message);
+
                                     this.Disconnect();
                                     await this.Connect();
                                     return;
@@ -251,6 +255,8 @@ namespace wpf_rtsp_streaming.Helpers
 
                                 if (Regex.IsMatch(message, "submitting a packet to the muxer: Broken pipe", RegexOptions.IgnoreCase))
                                 {
+                                    this.onMessage.OnNext(message);
+
                                     this.Disconnect();
                                     await this.Connect();
                                     return;

@@ -93,16 +93,6 @@ namespace wpf_rtsp_streaming
 
                 PrintService = new Print(LogService);
 
-                Process currentProcess = Process.GetCurrentProcess();
-                List<Process> processes = Process.GetProcesses().Where((n) => n.ProcessName == currentProcess.ProcessName).Where((n) => n.Id != currentProcess.Id).ToList();
-                if (processes.Count() > 0 && !isDebugMode)
-                {
-                    PrintService.Log("App was opened repeatedly", Print.EMode.warning);
-
-                    App.Current.Shutdown();
-                    return;
-                }
-
                 Application.Current.DispatcherUnhandledException += Current_DispatcherUnhandledException;
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
                 TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
@@ -110,8 +100,6 @@ namespace wpf_rtsp_streaming
 
                 LogService.Write("");
                 PrintService.Log("App, Start", Print.EMode.info);
-
-                App.DeletePID();
 
                 DataCenter.DataCenter.StreamingInfo.FilePath = StreamingFile.FullName;
                 DataCenter.DataCenter.StreamingInfo.Read();
@@ -216,7 +204,7 @@ namespace wpf_rtsp_streaming
             }
         }
 
-        private static void DeletePID()
+        public static void DeletePID()
         {
             try
             {

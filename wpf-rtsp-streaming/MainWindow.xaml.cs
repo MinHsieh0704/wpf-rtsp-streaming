@@ -173,11 +173,28 @@ namespace wpf_rtsp_streaming
             }
         }
 
-        private void ButtonStop_Click(object sender, RoutedEventArgs e)
+        private async void ButtonStop_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                this.StopMediamtx();
+                this.IsShowLoading = true;
+
+                await Task.Run(new Action(() =>
+                {
+                    try
+                    {
+                        this.StopMediamtx();
+                    }
+                    catch (Exception ex)
+                    {
+                        ex = ExceptionHelper.GetReal(ex);
+                        string message = ex.Message;
+
+                        App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
+
+                        MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }));
 
                 App.WritePID();
             }
@@ -189,6 +206,10 @@ namespace wpf_rtsp_streaming
                 App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
 
                 MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                this.IsShowLoading = false;
             }
         }
 
@@ -295,10 +316,12 @@ namespace wpf_rtsp_streaming
             }
         }
 
-        private void ButtonStreamingStop_Click(object sender, RoutedEventArgs e)
+        private async void ButtonStreamingStop_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                this.IsShowLoading = true;
+
                 Button element = sender as Button;
                 if (element == null)
                 {
@@ -311,7 +334,22 @@ namespace wpf_rtsp_streaming
                     return;
                 }
 
-                this.StopStreaming(streamingInfo);
+                await Task.Run(new Action(() =>
+                {
+                    try
+                    {
+                        this.StopStreaming(streamingInfo);
+                    }
+                    catch (Exception ex)
+                    {
+                        ex = ExceptionHelper.GetReal(ex);
+                        string message = ex.Message;
+
+                        App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
+
+                        MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }));
 
                 App.WritePID();
             }
@@ -323,6 +361,10 @@ namespace wpf_rtsp_streaming
                 App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
 
                 MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                this.IsShowLoading = false;
             }
         }
 
@@ -374,16 +416,23 @@ namespace wpf_rtsp_streaming
                         streaming.Dispose();
                     }
                 }
-                foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
+
+                this.Dispatcher.Invoke(new Action(() =>
                 {
-                    item.IsStart = false;
-                }
+                    foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
+                    {
+                        item.IsStart = false;
+                    }
+                }));
 
                 App.Mediamtx.Dispose();
 
-                this.IsStart = false;
+                this.Dispatcher.Invoke(new Action(() =>
+                {
+                    this.IsStart = false;
 
-                this.Streaming.Items.Refresh();
+                    this.Streaming.Items.Refresh();
+                }));
             }
             catch (Exception ex)
             {
@@ -449,22 +498,25 @@ namespace wpf_rtsp_streaming
         {
             try
             {
-                foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
+                this.Dispatcher.Invoke(new Action(() =>
                 {
-                    if (item.Index != streamingInfo.Index)
+                    foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
                     {
-                        continue;
+                        if (item.Index != streamingInfo.Index)
+                        {
+                            continue;
+                        }
+
+                        item.IsStart = false;
+
+                        if (App.Streamings != null)
+                        {
+                            App.Streamings[item.Index - 1].Disconnect();
+                        }
                     }
 
-                    item.IsStart = false;
-
-                    if (App.Streamings != null)
-                    {
-                        App.Streamings[item.Index - 1].Disconnect();
-                    }
-                }
-
-                this.Streaming.Items.Refresh();
+                    this.Streaming.Items.Refresh();
+                }));
             }
             catch (Exception ex)
             {

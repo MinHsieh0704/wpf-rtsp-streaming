@@ -27,6 +27,8 @@ namespace wpf_rtsp_streaming
 
         public static Log LogService { get; set; } = null;
 
+        public static bool IsDebugMode { get; set; }
+
         public static readonly TimeSpan LogExpiredDate = TimeSpan.FromDays(3);
         public static readonly Subject<bool> LogExpiredStop = new Subject<bool>();
 
@@ -82,10 +84,9 @@ namespace wpf_rtsp_streaming
 
             try
             {
-                bool isDebugMode = false;
                 if (e.Args != null && e.Args.Length != 0)
                 {
-                    isDebugMode = e.Args[0].ToLower() == "debug";
+                    App.IsDebugMode = e.Args[0].ToLower() == "debug";
                 }
 
                 LogService = new Log();

@@ -41,7 +41,7 @@ namespace wpf_rtsp_streaming
 
                 Process currentProcess = Process.GetCurrentProcess();
                 List<Process> processes = Process.GetProcesses().Where((n) => n.ProcessName == currentProcess.ProcessName).Where((n) => n.Id != currentProcess.Id).ToList();
-                if (processes.Count() > 0)
+                if (!App.IsDebugMode && processes.Count() > 0)
                 {
                     App.PrintService.Log("App, Opened Repeatedly", Print.EMode.warning);
 

@@ -54,6 +54,7 @@ namespace wpf_rtsp_streaming.Helpers
                     };
 
                     process.Start();
+                    App.WritePID(-1, process.Id);
 
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
@@ -66,7 +67,11 @@ namespace wpf_rtsp_streaming.Helpers
                     process.CancelOutputRead();
                     process.CancelErrorRead();
 
-                    if (!process.HasExited) process.Kill();
+                    if (!process.HasExited)
+                    {
+                        process.Kill();
+                        App.WritePID(process.Id, -1);
+                    }
 
                     return result;
                 }
@@ -120,6 +125,7 @@ namespace wpf_rtsp_streaming.Helpers
                     };
 
                     process.Start();
+                    App.WritePID(-1, process.Id);
 
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
@@ -132,7 +138,11 @@ namespace wpf_rtsp_streaming.Helpers
                     process.CancelOutputRead();
                     process.CancelErrorRead();
 
-                    if (!process.HasExited) process.Kill();
+                    if (!process.HasExited)
+                    {
+                        process.Kill();
+                        App.WritePID(process.Id, -1);
+                    }
                 }
             }
             catch (Exception ex)

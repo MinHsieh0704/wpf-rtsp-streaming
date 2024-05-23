@@ -96,6 +96,7 @@ namespace wpf_rtsp_streaming.Helpers
                 };
 
                 this.process.Start();
+                App.WritePID(this.processId, process.Id);
                 this.processId = this.process.Id;
 
                 this.process.BeginOutputReadLine();
@@ -119,7 +120,11 @@ namespace wpf_rtsp_streaming.Helpers
                     this.process.CancelOutputRead();
                     this.process.CancelErrorRead();
 
-                    if (!this.process.HasExited) this.process.Kill();
+                    if (!this.process.HasExited)
+                    {
+                        process.Kill();
+                        App.WritePID(this.processId, -1);
+                    }
                     this.process.Close();
                     this.process.Dispose();
 

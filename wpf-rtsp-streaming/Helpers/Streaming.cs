@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -123,6 +124,7 @@ namespace wpf_rtsp_streaming.Helpers
                 };
 
                 this.process.Start();
+                App.WritePID(this.processId, process.Id);
                 this.processId = this.process.Id;
 
                 this.process.BeginOutputReadLine();
@@ -309,6 +311,7 @@ namespace wpf_rtsp_streaming.Helpers
                     };
 
                     this.process.Start();
+                    App.WritePID(this.processId, process.Id);
                     this.processId = this.process.Id;
 
                     this.process.BeginOutputReadLine();
@@ -317,12 +320,14 @@ namespace wpf_rtsp_streaming.Helpers
                     if (i == 0)
                     {
                         this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -F \"{url}\"");
+                        App.PrintService.Log($"1, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
 
                         await formatCheckTaskCompletionSource.Task;
                     }
                     else
                     {
                         this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --live-from-start --no-playlist -o - \"{url}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
+                        App.PrintService.Log($"2, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
                     }
                 }
 
@@ -351,7 +356,11 @@ namespace wpf_rtsp_streaming.Helpers
 
                     Community.KillChildProcess(this.process.Id);
 
-                    if (!this.process.HasExited) this.process.Kill();
+                    if (!this.process.HasExited)
+                    {
+                        process.Kill();
+                        App.WritePID(this.processId, -1);
+                    }
                     this.process.Close();
                     this.process.Dispose();
 

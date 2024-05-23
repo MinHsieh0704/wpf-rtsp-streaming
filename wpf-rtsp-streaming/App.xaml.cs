@@ -38,6 +38,7 @@ namespace wpf_rtsp_streaming
 
         public static Mediamtx Mediamtx { get; set; }
         public static List<Streaming> Streamings { get; set; }
+        public static List<int> ProcessIds { get; set; } = new List<int>();
 
         private static DirectoryInfo _logPath = new DirectoryInfo($"{App.CommonPath}\\logs");
         public static DirectoryInfo LogPath
@@ -132,9 +133,9 @@ namespace wpf_rtsp_streaming
                 App.Mediamtx.Dispose();
             }
 
-            App.WritePID();
-
             App.LogExpiredStop.OnNext(true);
+
+            App.WritePID(-1, -1);
 
             PrintService.Log("App, Exit", Print.EMode.info);
 
@@ -231,8 +232,7 @@ namespace wpf_rtsp_streaming
                                     string processName = __pidInformations[0];
                                     int processId = Convert.ToInt32(__pidInformations[1]);
 
-                                    Process[] processes = Process.GetProcesses();
-                                    Process process = processes.Where((n) => n.ProcessName == processName).Where((n) => n.Id == processId).FirstOrDefault();
+                                    Process process = Process.GetProcesses().Where((n) => n.ProcessName == processName).Where((n) => n.Id == processId).FirstOrDefault();
                                     if (process == null)
                                     {
                                         continue;
@@ -240,7 +240,10 @@ namespace wpf_rtsp_streaming
 
                                     Community.KillChildProcess(process.Id);
 
-                                    if (!process.HasExited) process.Kill();
+                                    if (!process.HasExited)
+                                    {
+                                        process.Kill();
+                                    }
                                     process.Close();
                                     process.Dispose();
                                 }
@@ -261,35 +264,50 @@ namespace wpf_rtsp_streaming
         {
             try
             {
+                App.WritePID(-1, -1);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public static void WritePID(int prevProcessId, int currProcessId)
+        {
+            try
+            {
+                if (prevProcessId != -1)
+                {
+                    App.ProcessIds.Remove(prevProcessId);
+                }
+                if (currProcessId != -1)
+                {
+                    App.ProcessIds.Add(currProcessId);
+                }
+
+                List<int> processIds = new List<int>();
+                if (App.ProcessIds != null)
+                {
+                    foreach (var processId in App.ProcessIds)
+                    {
+                        if (processId != -1)
+                        {
+                            processIds.Add(processId);
+                        }
+                    }
+                }
+
                 using (FileStream fileStream = new FileStream(App.PIDFile.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
                 {
                     using (StreamWriter writer = new StreamWriter(fileStream))
                     {
                         List<string> pidInformations = new List<string>();
-                        if (App.Streamings != null)
+                        foreach (var processId in processIds)
                         {
-                            foreach (var streaming in App.Streamings)
+                            Process process = Process.GetProcesses().Where((n) => n.Id == Convert.ToInt32(processId)).FirstOrDefault();
+                            if (process != null)
                             {
-                                if (streaming.processId == -1)
-                                {
-                                    continue;
-                                }
-
-                                if (streaming.filePath.IndexOf("https://www.youtube.com") > -1)
-                                {
-                                    pidInformations.Add($"cmd,{streaming.processId}");
-                                }
-                                else
-                                {
-                                    pidInformations.Add($"ffmpeg,{streaming.processId}");
-                                }
-                            }
-                        }
-                        if (App.Mediamtx != null)
-                        {
-                            if (App.Mediamtx.processId != -1)
-                            {
-                                pidInformations.Add($"mediamtx,{App.Mediamtx.processId}");
+                                pidInformations.Add($"{process.ProcessName},{process.Id}");
                             }
                         }
 

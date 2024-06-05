@@ -264,6 +264,15 @@ namespace wpf_rtsp_streaming.Helpers
                                     return;
                                 }
 
+                                if (Regex.IsMatch(message, "Did not get any data blocks", RegexOptions.IgnoreCase))
+                                {
+                                    this.onMessage.OnNext(message);
+
+                                    this.Disconnect();
+                                    await this.Connect();
+                                    return;
+                                }
+
                                 if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
                                 {
                                     formatCheckTaskCompletionSource.SetCanceled();

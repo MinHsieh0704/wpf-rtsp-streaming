@@ -20,6 +20,8 @@ namespace wpf_rtsp_streaming.Helpers
 
         public Subject<Exception> onError { get; } = new Subject<Exception>();
 
+        public Subject<string> onClose { get; } = new Subject<string>();
+
         public string filePath { get; set; }
         public string rtspPath { get; set; }
 
@@ -43,6 +45,7 @@ namespace wpf_rtsp_streaming.Helpers
 
                 this.onMessage.OnCompleted();
                 this.onError.OnCompleted();
+                this.onClose.OnCompleted();
 
                 disposed = true;
             }
@@ -68,6 +71,27 @@ namespace wpf_rtsp_streaming.Helpers
                 else
                 {
                     this.ConnectWithFile();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Connect
+        /// </summary>
+        public async Task Download()
+        {
+            try
+            {
+                if (filePath.IndexOf("https://www.youtube.com") > -1)
+                {
+                    await this.DownloadWithYoutube();
+                }
+                else
+                {
                 }
             }
             catch (Exception ex)
@@ -343,6 +367,192 @@ namespace wpf_rtsp_streaming.Helpers
                     else
                     {
                         this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --live-from-start --no-playlist -o - \"{url}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
+                        App.PrintService.Log($"2, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
+                    }
+                }
+
+                await taskCompletionSource.Task;
+            }
+            catch (OperationCanceledException e)
+            {
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Download With Youtube
+        /// </summary>
+        private async Task DownloadWithYoutube()
+        {
+            try
+            {
+                string file = $"{AppDomain.CurrentDomain.BaseDirectory}mediamtx\\yt-dlp.exe";
+                if (!File.Exists(file))
+                {
+                    throw new Exception($"Can not found {file}");
+                }
+
+                Uri uri = new Uri(this.filePath);
+                NameValueCollection query = HttpUtility.ParseQueryString(uri.Query);
+
+                string url = null;
+                foreach (var key in query)
+                {
+                    if (key.ToString() != "v")
+                    {
+                        continue;
+                    }
+
+                    url = $"{uri.AbsoluteUri.Replace(uri.Query, "")}?{key}={query[key.ToString()]}";
+                    break;
+                }
+                if (url == null)
+                {
+                    throw new Exception("Youtube url lose some query parameter");
+                }
+
+                TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+                for (int i = 0; i < 2; i++)
+                {
+                    TaskCompletionSource<bool> formatCheckTaskCompletionSource = new TaskCompletionSource<bool>();
+
+                    this.process = new Process();
+
+                    this.process.StartInfo.FileName = "cmd.exe";
+                    this.process.StartInfo.UseShellExecute = false;
+                    this.process.StartInfo.RedirectStandardOutput = true;
+                    this.process.StartInfo.RedirectStandardError = true;
+                    this.process.StartInfo.RedirectStandardInput = true;
+                    this.process.StartInfo.CreateNoWindow = true;
+                    this.process.StartInfo.WorkingDirectory = $"{AppDomain.CurrentDomain.BaseDirectory}mediamtx";
+
+                    this.process.EnableRaisingEvents = true;
+
+                    this.process.OutputDataReceived += async (object sender, DataReceivedEventArgs e) =>
+                    {
+                        string message = e.Data;
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            this.onMessage.OnNext(message);
+
+                            if (i == 0)
+                            {
+                                if (Regex.IsMatch(message, "Available formats for ", RegexOptions.IgnoreCase))
+                                {
+                                    await Task.Delay(500);
+
+                                    this.Disconnect();
+
+                                    if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
+                                    {
+                                        formatCheckTaskCompletionSource.SetResult(true);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (Regex.IsMatch(message, "Extracting URL: ", RegexOptions.IgnoreCase))
+                                {
+                                    if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                                    {
+                                        taskCompletionSource.SetResult(true);
+                                    }
+                                }
+                                else if (Regex.IsMatch(message, "\\[download\\] 100%", RegexOptions.IgnoreCase))
+                                {
+                                    this.onClose.OnNext($"Download Youtube {url} Done");
+                                }
+                            }
+                        }
+                    };
+                    this.process.ErrorDataReceived += async (object sender, DataReceivedEventArgs e) =>
+                    {
+                        string message = e.Data;
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            if (Regex.IsMatch(message, "fail|error", RegexOptions.IgnoreCase))
+                            {
+                                if (Regex.IsMatch(message, "\\[download\\] Got error: ", RegexOptions.IgnoreCase))
+                                {
+                                    this.onMessage.OnNext(message);
+
+                                    this.Disconnect();
+                                    return;
+                                }
+
+                                if (Regex.IsMatch(message, "nsig extraction failed: ", RegexOptions.IgnoreCase))
+                                {
+                                    this.onMessage.OnNext(message);
+
+                                    return;
+                                }
+
+                                if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
+                                {
+                                    formatCheckTaskCompletionSource.SetCanceled();
+                                }
+                                if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                                {
+                                    taskCompletionSource.SetResult(true);
+                                }
+
+                                this.onError.OnNext(new Exception(message));
+                                return;
+                            }
+
+                            this.onMessage.OnNext(message);
+
+                            if (i == 0)
+                            {
+                                if (Regex.IsMatch(message, "Available formats for ", RegexOptions.IgnoreCase))
+                                {
+                                    await Task.Delay(500);
+
+                                    this.Disconnect();
+
+                                    if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
+                                    {
+                                        formatCheckTaskCompletionSource.SetResult(true);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (Regex.IsMatch(message, "Extracting URL: ", RegexOptions.IgnoreCase))
+                                {
+                                    if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                                    {
+                                        taskCompletionSource.SetResult(true);
+                                    }
+                                }
+                                else if (Regex.IsMatch(message, "\\[download\\] 100%", RegexOptions.IgnoreCase))
+                                {
+                                    this.onClose.OnNext($"Download Youtube {url} Done");
+                                }
+                            }
+                        }
+                    };
+
+                    this.process.Start();
+                    App.WritePID(this.processId, process.Id);
+                    this.processId = this.process.Id;
+
+                    this.process.BeginOutputReadLine();
+                    this.process.BeginErrorReadLine();
+
+                    if (i == 0)
+                    {
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -F \"{url}\"");
+                        App.PrintService.Log($"1, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
+
+                        await formatCheckTaskCompletionSource.Task;
+                    }
+                    else
+                    {
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --live-from-start --no-playlist -o \"{AppDomain.CurrentDomain.BaseDirectory}Downloads\\%(title)s.%(ext)s\" \"{url}\"");
                         App.PrintService.Log($"2, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
                     }
                 }

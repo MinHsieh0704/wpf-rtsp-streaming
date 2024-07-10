@@ -218,6 +218,7 @@ namespace wpf_rtsp_streaming
                     FilePath = e.FilePath,
                     RTSPPath = e.RTSPPath,
                     IsStart = false,
+                    IsDownload = false,
                 };
                 DataCenter.DataCenter.StreamingInfo.Add(streamingInfo);
 
@@ -255,6 +256,56 @@ namespace wpf_rtsp_streaming
                 App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
 
                 MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ButtonStreamingDownload_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                this.IsShowLoading = true;
+
+                Button element = sender as Button;
+                if (element == null)
+                {
+                    return;
+                }
+
+                DataCenter.StreamingInfo.IStreamingInfo streamingInfo = element.DataContext as DataCenter.StreamingInfo.IStreamingInfo;
+                if (streamingInfo == null)
+                {
+                    return;
+                }
+
+                foreach (var item in DataCenter.DataCenter.StreamingInfo.StreamingInfos)
+                {
+                    if (item.Index != streamingInfo.Index)
+                    {
+                        continue;
+                    }
+
+                    item.IsDownload = true;
+
+                    if (App.Streamings != null)
+                    {
+                        await App.Streamings[item.Index - 1].Download();
+                    }
+                }
+
+                this.Streaming.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                ex = ExceptionHelper.GetReal(ex);
+                string message = ex.Message;
+
+                App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
+
+                MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                this.IsShowLoading = false;
             }
         }
 
@@ -463,7 +514,23 @@ namespace wpf_rtsp_streaming
                             App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.error, $"Streaming_{streamingInfo.RTSPPath.Replace("/", "_")}");
 
                             MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+                        }));
+                    }
+                    catch (TaskCanceledException ex)
+                    {
+                    }
+                });
+                streaming.onClose.Subscribe((x) =>
+                {
+                    try
+                    {
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            this.StopStreaming(streamingInfo);
 
+                            string message = x;
+
+                            App.PrintService.Log($"Streaming_{streamingInfo.RTSPPath} [{streaming.processId}], {message}", Print.EMode.success, $"Streaming_{streamingInfo.RTSPPath.Replace("/", "_")}");
                         }));
                     }
                     catch (TaskCanceledException ex)
@@ -496,6 +563,7 @@ namespace wpf_rtsp_streaming
                         }
 
                         item.IsStart = false;
+                        item.IsDownload = false;
 
                         if (App.Streamings != null)
                         {

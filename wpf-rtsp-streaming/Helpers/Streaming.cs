@@ -273,6 +273,13 @@ namespace wpf_rtsp_streaming.Helpers
                                     return;
                                 }
 
+                                if (Regex.IsMatch(message, "nsig extraction failed: ", RegexOptions.IgnoreCase))
+                                {
+                                    this.onMessage.OnNext(message);
+
+                                    return;
+                                }
+
                                 if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
                                 {
                                     formatCheckTaskCompletionSource.SetCanceled();

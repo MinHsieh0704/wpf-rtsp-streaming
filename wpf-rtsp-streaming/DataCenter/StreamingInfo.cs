@@ -23,7 +23,11 @@ namespace wpf_rtsp_streaming.DataCenter
             [JsonIgnore]
             public string URL { get; set; }
             [JsonIgnore]
+            public bool IsYoutube { get; set; }
+            [JsonIgnore]
             public bool IsStart { get; set; }
+            [JsonIgnore]
+            public bool IsDownload { get; set; }
         }
 
         public ObservableCollection<IStreamingInfo> StreamingInfos
@@ -90,7 +94,9 @@ namespace wpf_rtsp_streaming.DataCenter
                                     FilePath = streaming.FilePath,
                                     RTSPPath = streaming.RTSPPath,
                                     URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:{App.RTSPPort}/{streaming.RTSPPath}",
+                                    IsYoutube = streaming.FilePath.IndexOf("https://www.youtube.com") > -1,
                                     IsStart = false,
+                                    IsDownload = false,
                                 });
                             }
                         }

@@ -70,7 +70,7 @@ namespace wpf_rtsp_streaming.Helpers
                 }
                 else
                 {
-                    this.ConnectWithFile();
+                    await this.ConnectWithFile();
                 }
             }
             catch (Exception ex)
@@ -103,7 +103,7 @@ namespace wpf_rtsp_streaming.Helpers
         /// <summary>
         /// Connect With File
         /// </summary>
-        private void ConnectWithFile()
+        private async Task ConnectWithFile()
         {
             try
             {
@@ -112,6 +112,8 @@ namespace wpf_rtsp_streaming.Helpers
                 {
                     throw new Exception($"Can not found {file}");
                 }
+
+                TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
 
                 this.process = new Process();
 
@@ -129,14 +131,24 @@ namespace wpf_rtsp_streaming.Helpers
                     string message = e.Data;
                     if (!string.IsNullOrEmpty(message))
                     {
+                        if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                        {
+                            taskCompletionSource.SetResult(true);
+                        }
+
                         this.onMessage.OnNext(message);
                     }
                 };
                 this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
-                    if (!string.IsNullOrEmpty(e.Data))
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
                     {
-                        string message = e.Data;
+                        if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                        {
+                            taskCompletionSource.SetResult(true);
+                        }
+
                         if (Regex.IsMatch(message.ToLower(), "fail|error", RegexOptions.IgnoreCase))
                         {
                             this.onError.OnNext(new Exception(message));
@@ -153,6 +165,8 @@ namespace wpf_rtsp_streaming.Helpers
 
                 this.process.BeginOutputReadLine();
                 this.process.BeginErrorReadLine();
+
+                await taskCompletionSource.Task;
             }
             catch (Exception ex)
             {

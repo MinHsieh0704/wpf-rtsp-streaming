@@ -4,10 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:wpf_rtsp_streaming.Components"
+             xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
              mc:Ignorable="d" 
              Panel.ZIndex="100"
              d:DesignWidth="780" d:DesignHeight="421"
-             d:Background="White">
+             d:Background="White" 
+             IsVisibleChanged="UserControl_IsVisibleChanged">
 
     <UserControl.Resources>
         <Style TargetType="Grid" x:Key="Container">
@@ -21,7 +23,7 @@
 
         <Style TargetType="Border" x:Key="BorderForm">
             <Setter Property="Width" Value="250"/>
-            <Setter Property="Height" Value="374"/>
+            <Setter Property="Height" Value="386"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="8 0 8 0"/>
             <Setter Property="VerticalAlignment" Value="Top"/>
@@ -45,11 +47,11 @@
         </Style>
 
         <Style TargetType="TextBlock" x:Key="TextBlockInformation">
-            <Setter Property="Height" Value="30"/>
+            <Setter Property="Height" Value="44"/>
             <Setter Property="Foreground" Value="#006ab7"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
-        
+
         <Style TargetType="Border" x:Key="BorderDivider">
             <Setter Property="Width" Value="250"/>
             <Setter Property="Height" Value="1"/>
@@ -99,7 +101,7 @@
                                         <Setter Property="Content" Value="Select File"/>
                                         <Setter Property="Foreground" Value="#35cda8"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="FontSize" Value="10"/>
                                         <Setter Property="VerticalContentAlignment" Value="Center"/>
                                         <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                     </Style>
@@ -116,6 +118,187 @@
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Background" TargetName="ButtonBorder" Value="#cecece"/>
                                 <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#cecece"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ComboBox" x:Key="ComboBoxDevice">
+            <Setter Property="Margin" Value="0,0,5,0"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#006ab7"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid x:Name="templateRoot">
+                            <Grid.Resources>
+                                <Style TargetType="Grid">
+                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                </Style>
+                            </Grid.Resources>
+
+                            <Popup x:Name="PART_Popup">
+                                <Popup.Resources>
+                                    <Style TargetType="Popup">
+                                        <Setter Property="AllowsTransparency" Value="True"/>
+                                        <Setter Property="IsOpen" Value="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
+                                        <Setter Property="Margin" Value="1"/>
+                                        <Setter Property="Placement" Value="Bottom"/>
+                                        <Setter Property="PopupAnimation" Value="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}"/>
+                                    </Style>
+                                </Popup.Resources>
+
+                                <theme:SystemDropShadowChrome x:Name="shadow">
+                                    <theme:SystemDropShadowChrome.Resources>
+                                        <Style TargetType="theme:SystemDropShadowChrome">
+                                            <Setter Property="Color" Value="Transparent"/>
+                                            <Setter Property="MinWidth" Value="{Binding ActualWidth, ElementName=templateRoot}"/>
+                                        </Style>
+                                    </theme:SystemDropShadowChrome.Resources>
+
+                                    <Border x:Name="dropDownBorder">
+                                        <Border.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#ffffff"/>
+                                                <Setter Property="BorderBrush" Value="#006ab7"/>
+                                                <Setter Property="BorderThickness" Value="1"/>
+                                                <Setter Property="CornerRadius" Value="4"/>
+                                                <Setter Property="Padding" Value="0,6,0,6"/>
+                                                <Setter Property="Margin" Value="0,3,0,0"/>
+                                            </Style>
+                                        </Border.Resources>
+
+                                        <ScrollViewer x:Name="DropDownScrollViewer">
+                                            <Grid x:Name="grid">
+                                                <Grid.Resources>
+                                                    <Style TargetType="Grid">
+                                                        <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled"/>
+                                                    </Style>
+                                                </Grid.Resources>
+
+                                                <Canvas x:Name="canvas">
+                                                    <Canvas.Resources>
+                                                        <Style TargetType="Canvas">
+                                                            <Setter Property="Width" Value="0"/>
+                                                            <Setter Property="Height" Value="0"/>
+                                                            <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                            <Setter Property="VerticalAlignment" Value="Top"/>
+                                                        </Style>
+                                                    </Canvas.Resources>
+
+                                                    <Rectangle x:Name="opaqueRect">
+                                                        <Rectangle.Resources>
+                                                            <Style TargetType="Rectangle">
+                                                                <Setter Property="Width" Value="{Binding ActualWidth, ElementName=dropDownBorder}"/>
+                                                                <Setter Property="Height" Value="{Binding ActualHeight, ElementName=dropDownBorder}"/>
+                                                                <Setter Property="Fill" Value="{Binding Background, ElementName=dropDownBorder}"/>
+                                                            </Style>
+                                                        </Rectangle.Resources>
+                                                    </Rectangle>
+                                                </Canvas>
+
+                                                <ItemsPresenter x:Name="ItemsPresenter">
+                                                    <ItemsPresenter.Resources>
+                                                        <Style TargetType="ItemsPresenter">
+                                                            <Setter Property="KeyboardNavigation.DirectionalNavigation" Value="Contained"/>
+                                                            <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                                        </Style>
+                                                    </ItemsPresenter.Resources>
+                                                </ItemsPresenter>
+                                            </Grid>
+                                        </ScrollViewer>
+                                    </Border>
+                                </theme:SystemDropShadowChrome>
+                            </Popup>
+
+                            <ToggleButton>
+                                <ToggleButton.Resources>
+                                    <Style TargetType="ToggleButton">
+                                        <Setter Property="OverridesDefaultStyle" Value="true"/>
+                                        <Setter Property="IsTabStop" Value="false"/>
+                                        <Setter Property="Focusable" Value="false"/>
+                                        <Setter Property="ClickMode" Value="Press"/>
+                                        <Setter Property="IsChecked" Value="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ToggleButton">
+                                                    <Border>
+                                                        <Border.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Padding" Value="2,0"/>
+                                                                <Setter Property="Background" Value="#ffffff"/>
+                                                                <Setter Property="BorderBrush" Value="#006ab7"/>
+                                                                <Setter Property="BorderThickness" Value="1"/>
+                                                                <Setter Property="CornerRadius" Value="4"/>
+                                                                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                                            </Style>
+                                                        </Border.Resources>
+                                                        
+                                                        <Label x:Name="ButtonLabel">
+                                                            <Label.Resources>
+                                                                <Style TargetType="Label">
+                                                                    <Setter Property="Content" Value="Select Device"/>
+                                                                    <Setter Property="Foreground" Value="#006ab7"/>
+                                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                                    <Setter Property="FontSize" Value="10"/>
+                                                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                                </Style>
+                                                            </Label.Resources>
+                                                        </Label>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ToggleButton.Resources>
+                            </ToggleButton>
+
+                            <Grid>
+                                <Grid.Resources>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </Grid.Resources>
+
+                                <ContentPresenter>
+                                    <ContentPresenter.Resources>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="ContentStringFormat" Value="{Binding Path=SelectionBoxItemStringFormat, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ComboBox}}"/>
+                                            <Setter Property="ContentTemplate" Value="{Binding Path=SelectionBoxItemTemplate, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ComboBox}}"/>
+                                            <Setter Property="ContentTemplateSelector" Value="{Binding Path=ItemTemplateSelector, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ComboBox}}"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="IsHitTestVisible" Value="False"/>
+                                        </Style>
+                                    </ContentPresenter.Resources>
+                                </ContentPresenter>
+                            </Grid>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasDropShadow" SourceName="PART_Popup" Value="True">
+                                <Setter Property="Margin" TargetName="shadow" Value="0,0,5,5"/>
+                                <Setter Property="Color" TargetName="shadow" Value="#710000"/>
+                            </Trigger>
+
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter Property="Height" TargetName="dropDownBorder" Value="95"/>
+                            </Trigger>
+
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsGrouping" Value="True"/>
+                                    <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+                            </MultiTrigger>
+
+                            <Trigger Property="ScrollViewer.CanContentScroll" SourceName="DropDownScrollViewer" Value="False">
+                                <Setter Property="Canvas.Top" TargetName="opaqueRect" Value="{Binding VerticalOffset, ElementName=DropDownScrollViewer}"/>
+                                <Setter Property="Canvas.Left" TargetName="opaqueRect" Value="{Binding HorizontalOffset, ElementName=DropDownScrollViewer}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -162,7 +345,7 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter Property="Background" TargetName="ButtonBorder" Value="#003b65"/>
                             </Trigger>
-                            
+
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Background" TargetName="ButtonBorder" Value="#cecece"/>
                                 <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#cecece"/>
@@ -246,38 +429,61 @@
                             </Border.Resources>
                         </Border>
                     </Border>
-                    
+
                     <Grid>
                         <Grid.Resources>
                             <Style TargetType="Grid">
                                 <Setter Property="Margin" Value="0 8 0 0"/>
                             </Style>
                         </Grid.Resources>
-                        
+
                         <Label>
                             <Label.Resources>
                                 <Style TargetType="Label" BasedOn="{StaticResource LabelTitle}">
-                                    <Setter Property="Content" Value="File Path"/>
+                                    <Setter Property="Content" Value="Source"/>
                                     <Setter Property="HorizontalAlignment" Value="Left"/>
                                     <Setter Property="VerticalAlignment" Value="Center"/>
                                 </Style>
                             </Label.Resources>
                         </Label>
 
-                        <Button Click="ButtonSelectFile_Click">
-                            <Button.Resources>
-                                <Style TargetType="Button" BasedOn="{StaticResource ButtonSelectFile}">
+                        <StackPanel>
+                            <StackPanel.Resources>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Orientation" Value="Horizontal"/>
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
                                     <Setter Property="VerticalAlignment" Value="Center"/>
                                 </Style>
-                            </Button.Resources>
-                        </Button>
+                            </StackPanel.Resources>
+
+                            <ComboBox SelectionChanged="ComboBoxDevice_SelectionChanged">
+                                <ComboBox.Resources>
+                                    <Style TargetType="ComboBox" BasedOn="{StaticResource ComboBoxDevice}">
+                                        <Setter Property="SelectedValuePath" Value="key"/>
+                                        <Setter Property="DisplayMemberPath" Value="value"/>
+                                        <Setter Property="SelectedItem" Value="{Binding Path=CurrDevice, Mode=TwoWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                                        <Setter Property="ItemsSource" Value="{Binding Path=Devices, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                                        <Setter Property="HorizontalAlignment" Value="Left"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </ComboBox.Resources>
+                            </ComboBox>
+
+                            <Button Click="ButtonSelectFile_Click">
+                                <Button.Resources>
+                                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource ButtonSelectFile}">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                        </StackPanel>
                     </Grid>
 
                     <TextBlock>
                         <TextBlock.Resources>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockInformation}">
-                                <Setter Property="Text" Value="Please Input Youtube url or file absolute path or use select file button."/>
+                                <Setter Property="Text" Value="Please Input Youtube url or file absolute path or use select file button or select device dropdown."/>
                                 <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
                             </Style>
                         </TextBlock.Resources>
@@ -324,7 +530,7 @@
                             <Style TargetType="StackPanel" BasedOn="{StaticResource StackPanelAction}">
                             </Style>
                         </StackPanel.Resources>
-                        
+
                         <Button Click="ButtonSave_Click">
                             <Button.Resources>
                                 <Style TargetType="Button" BasedOn="{StaticResource ButtonSave}">
@@ -333,7 +539,7 @@
                                 </Style>
                             </Button.Resources>
                         </Button>
-                        
+
                         <Button Click="ButtonCancel_Click">
                             <Button.Resources>
                                 <Style TargetType="Button" BasedOn="{StaticResource ButtonCancel}">

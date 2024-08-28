@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
@@ -12,6 +13,12 @@ namespace wpf_rtsp_streaming.Helpers
 {
     public class Streaming : IDisposable
     {
+        public class IDevice
+        {
+            public string Name { get; set; }
+            public string AlternativeName { get; set; }
+        }
+
         private Process process { get; set; }
 
         public int processId { get; private set; } = -1;
@@ -24,6 +31,7 @@ namespace wpf_rtsp_streaming.Helpers
 
         public string filePath { get; set; }
         public string rtspPath { get; set; }
+        public string deviceAlternativeName { get; set; }
 
         #region Dispose
         private bool disposed { get; set; } = false;
@@ -64,13 +72,20 @@ namespace wpf_rtsp_streaming.Helpers
         {
             try
             {
-                if (filePath.IndexOf("https://www.youtube.com") > -1)
+                if (this.filePath.IndexOf("https://www.youtube.com") > -1)
                 {
                     await this.ConnectWithYoutube();
                 }
                 else
                 {
-                    this.ConnectWithFile();
+                    if (string.IsNullOrEmpty(this.deviceAlternativeName))
+                    {
+                        await this.ConnectWithFile();
+                    }
+                    else
+                    {
+                        await this.ConnectWithDevice();
+                    }
                 }
             }
             catch (Exception ex)
@@ -86,7 +101,7 @@ namespace wpf_rtsp_streaming.Helpers
         {
             try
             {
-                if (filePath.IndexOf("https://www.youtube.com") > -1)
+                if (this.filePath.IndexOf("https://www.youtube.com") > -1)
                 {
                     await this.DownloadWithYoutube();
                 }
@@ -101,9 +116,9 @@ namespace wpf_rtsp_streaming.Helpers
         }
 
         /// <summary>
-        /// Connect With File
+        /// Get Device List
         /// </summary>
-        private void ConnectWithFile()
+        public async Task<List<IDevice>> GetDeviceList()
         {
             try
             {
@@ -112,6 +127,131 @@ namespace wpf_rtsp_streaming.Helpers
                 {
                     throw new Exception($"Can not found {file}");
                 }
+
+                this.process = new Process();
+
+                this.process.StartInfo.FileName = file;
+                this.process.StartInfo.UseShellExecute = false;
+                this.process.StartInfo.RedirectStandardOutput = true;
+                this.process.StartInfo.RedirectStandardError = true;
+                this.process.StartInfo.CreateNoWindow = true;
+                this.process.StartInfo.Arguments = $"-list_devices true -f dshow -i dummy";
+
+                this.process.EnableRaisingEvents = true;
+
+                List<IDevice> devices = new List<IDevice>();
+
+                this.process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+                {
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        if (Regex.IsMatch(message, "dshow ", RegexOptions.IgnoreCase))
+                        {
+                            if (Regex.IsMatch(message, "\\(video\\)", RegexOptions.IgnoreCase) && (devices.Count == 0 || !string.IsNullOrEmpty(devices.LastOrDefault().AlternativeName)))
+                            {
+                                string name = message;
+                                name = new Regex("\\(video\\)", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = name.Trim();
+
+                                devices.Add(new IDevice() { Name = name });
+                            }
+                            else if (string.IsNullOrEmpty(devices.LastOrDefault().AlternativeName))
+                            {
+                                string alternativeName = message;
+                                alternativeName = new Regex("Alternative name", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = alternativeName.Trim();
+
+                                devices.LastOrDefault().AlternativeName = alternativeName;
+                            }
+                        }
+                    };
+                };
+                this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+                {
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        if (Regex.IsMatch(message, "dshow ", RegexOptions.IgnoreCase))
+                        {
+                            if (Regex.IsMatch(message, "\\(video\\)", RegexOptions.IgnoreCase) && (devices.Count == 0 || !string.IsNullOrEmpty(devices.LastOrDefault()?.AlternativeName)))
+                            {
+                                string name = message;
+                                name = new Regex("\\(video\\)", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = name.Trim();
+
+                                devices.Add(new IDevice() { Name = name });
+                            }
+                            else if (devices.Count != 0 && string.IsNullOrEmpty(devices.LastOrDefault()?.AlternativeName))
+                            {
+                                string alternativeName = message;
+                                alternativeName = new Regex("Alternative name", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = alternativeName.Trim();
+
+                                devices.LastOrDefault().AlternativeName = alternativeName;
+                            }
+                        }
+                    };
+                };
+
+                TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+                Task.Run(new Action(async () =>
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            if (this.process.HasExited)
+                            {
+                                taskCompletionSource.SetResult(true);
+                                break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                    }
+                }));
+
+                this.process.Start();
+                App.WritePID(this.processId, process.Id);
+                this.processId = this.process.Id;
+
+                this.process.BeginOutputReadLine();
+                this.process.BeginErrorReadLine();
+
+                await taskCompletionSource.Task;
+
+                return devices;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Connect With File
+        /// </summary>
+        private async Task ConnectWithFile()
+        {
+            try
+            {
+                string file = $"{AppDomain.CurrentDomain.BaseDirectory}mediamtx\\ffmpeg.exe";
+                if (!File.Exists(file))
+                {
+                    throw new Exception($"Can not found {file}");
+                }
+
+                TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
 
                 this.process = new Process();
 
@@ -129,14 +269,24 @@ namespace wpf_rtsp_streaming.Helpers
                     string message = e.Data;
                     if (!string.IsNullOrEmpty(message))
                     {
+                        if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                        {
+                            taskCompletionSource.SetResult(true);
+                        }
+
                         this.onMessage.OnNext(message);
                     }
                 };
                 this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
-                    if (!string.IsNullOrEmpty(e.Data))
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
                     {
-                        string message = e.Data;
+                        if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                        {
+                            taskCompletionSource.SetResult(true);
+                        }
+
                         if (Regex.IsMatch(message.ToLower(), "fail|error", RegexOptions.IgnoreCase))
                         {
                             this.onError.OnNext(new Exception(message));
@@ -153,6 +303,143 @@ namespace wpf_rtsp_streaming.Helpers
 
                 this.process.BeginOutputReadLine();
                 this.process.BeginErrorReadLine();
+
+                await taskCompletionSource.Task;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Connect With Device
+        /// </summary>
+        private async Task ConnectWithDevice()
+        {
+            try
+            {
+                string file = $"{AppDomain.CurrentDomain.BaseDirectory}mediamtx\\ffmpeg.exe";
+                if (!File.Exists(file))
+                {
+                    throw new Exception($"Can not found {file}");
+                }
+
+                string deviceInfo = "";
+
+                TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+                for (int i = 0; i < 2; i++)
+                {
+                    TaskCompletionSource<bool> formatCheckTaskCompletionSource = new TaskCompletionSource<bool>();
+
+                    this.process = new Process();
+
+                    this.process.StartInfo.FileName = "cmd.exe";
+                    this.process.StartInfo.UseShellExecute = false;
+                    this.process.StartInfo.RedirectStandardOutput = true;
+                    this.process.StartInfo.RedirectStandardError = true;
+                    this.process.StartInfo.RedirectStandardInput = true;
+                    this.process.StartInfo.CreateNoWindow = true;
+                    this.process.StartInfo.WorkingDirectory = $"{AppDomain.CurrentDomain.BaseDirectory}mediamtx";
+
+                    this.process.EnableRaisingEvents = true;
+
+                    this.process.OutputDataReceived += async (object sender, DataReceivedEventArgs e) =>
+                    {
+                        string message = e.Data;
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            this.onMessage.OnNext(message);
+
+                            if (i == 0)
+                            {
+                                if (Regex.IsMatch(message, "^\\[dshow.*\\] +vcodec", RegexOptions.IgnoreCase) && !Regex.IsMatch(message, "\\)$", RegexOptions.IgnoreCase))
+                                {
+                                    deviceInfo = message;
+                                }
+                            }
+                            else
+                            {
+                                if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                                {
+                                    taskCompletionSource.SetResult(true);
+                                }
+                            }
+                        }
+                    };
+                    this.process.ErrorDataReceived += async (object sender, DataReceivedEventArgs e) =>
+                    {
+                        string message = e.Data;
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            if (Regex.IsMatch(message.ToLower(), "fail|error", RegexOptions.IgnoreCase))
+                            {
+                                if (i == 0)
+                                {
+                                    if (Regex.IsMatch(message, "Error opening input", RegexOptions.IgnoreCase))
+                                    {
+                                        if (!formatCheckTaskCompletionSource.Task.IsCompleted && !formatCheckTaskCompletionSource.Task.IsCanceled)
+                                        {
+                                            formatCheckTaskCompletionSource.SetResult(true);
+                                        }
+
+                                        return;
+                                    }
+                                }
+
+                                this.onError.OnNext(new Exception(message));
+                                return;
+                            }
+
+                            this.onMessage.OnNext(message);
+
+                            if (i == 0)
+                            {
+                                if (Regex.IsMatch(message, "^\\[dshow.*\\] +vcodec", RegexOptions.IgnoreCase) && !Regex.IsMatch(message, "\\)$", RegexOptions.IgnoreCase))
+                                {
+                                    deviceInfo = message;
+                                }
+                            }
+                            else
+                            {
+                                if (!taskCompletionSource.Task.IsCompleted && !taskCompletionSource.Task.IsCanceled)
+                                {
+                                    taskCompletionSource.SetResult(true);
+                                }
+                            }
+                        }
+                    };
+
+                    this.process.Start();
+                    App.WritePID(this.processId, process.Id);
+                    this.processId = this.process.Id;
+
+                    this.process.BeginOutputReadLine();
+                    this.process.BeginErrorReadLine();
+
+                    if (i == 0)
+                    {
+                        this.process.StandardInput.WriteLine($"ffmpeg.exe -list_options true -f dshow -i video=\"{this.deviceAlternativeName}\"");
+                        App.PrintService.Log($"1, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
+
+                        await formatCheckTaskCompletionSource.Task;
+                    }
+                    else
+                    {
+                        deviceInfo = deviceInfo.Substring(deviceInfo.IndexOf("max"));
+                        deviceInfo = new Regex("max *", RegexOptions.IgnoreCase).Replace(deviceInfo, "");
+
+                        List<string> deviceInfos = deviceInfo.Split(' ').ToList();
+
+                        string size = new Regex("s=", RegexOptions.IgnoreCase).Replace(deviceInfos[0], "").Trim();
+                        string fps = new Regex("fps=", RegexOptions.IgnoreCase).Replace(deviceInfos[1], "").Trim();
+
+                        this.process.StandardInput.WriteLine($"ffmpeg.exe -f dshow -video_size {size} -framerate {fps} -i video=\"{this.deviceAlternativeName}\" -c:v libx264 -preset:v ultrafast -tune:v zerolatency -rtsp_transport tcp -pix_fmt yuvj420p -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
+                        App.PrintService.Log($"2, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
+                    }
+                }
+
+                await taskCompletionSource.Task;
             }
             catch (Exception ex)
             {

@@ -20,6 +20,7 @@ namespace wpf_rtsp_streaming.DataCenter
             public int Index { get; set; }
             public string FilePath { get; set; }
             public string RTSPPath { get; set; }
+            public string DeviceAlternativeName { get; set; }
             [JsonIgnore]
             public string URL { get; set; }
             [JsonIgnore]
@@ -93,6 +94,7 @@ namespace wpf_rtsp_streaming.DataCenter
                                     Index = i + 1,
                                     FilePath = streaming.FilePath,
                                     RTSPPath = streaming.RTSPPath,
+                                    DeviceAlternativeName = streaming.DeviceAlternativeName,
                                     URL = $"rtsp://{(this.address == null ? "127.0.0.1" : this.address.ToString())}:{App.RTSPPort}/{streaming.RTSPPath}",
                                     IsYoutube = streaming.FilePath.IndexOf("https://www.youtube.com") > -1,
                                     IsStart = false,

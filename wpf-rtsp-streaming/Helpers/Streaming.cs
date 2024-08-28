@@ -13,6 +13,12 @@ namespace wpf_rtsp_streaming.Helpers
 {
     public class Streaming : IDisposable
     {
+        public class IDevice
+        {
+            public string Name { get; set; }
+            public string AlternativeName { get; set; }
+        }
+
         private Process process { get; set; }
 
         public int processId { get; private set; } = -1;
@@ -25,6 +31,7 @@ namespace wpf_rtsp_streaming.Helpers
 
         public string filePath { get; set; }
         public string rtspPath { get; set; }
+        public string deviceAlternativeName { get; set; }
 
         #region Dispose
         private bool disposed { get; set; } = false;
@@ -71,14 +78,13 @@ namespace wpf_rtsp_streaming.Helpers
                 }
                 else
                 {
-                    List<string> devices = await this.GetDeviceList();
-                    if (devices.IndexOf(this.filePath) > -1)
+                    if (string.IsNullOrEmpty(this.deviceAlternativeName))
                     {
-                        await this.ConnectWithDevice();
+                        await this.ConnectWithFile();
                     }
                     else
                     {
-                        await this.ConnectWithFile();
+                        await this.ConnectWithDevice();
                     }
                 }
             }
@@ -112,7 +118,7 @@ namespace wpf_rtsp_streaming.Helpers
         /// <summary>
         /// Get Device List
         /// </summary>
-        public async Task<List<string>> GetDeviceList()
+        public async Task<List<IDevice>> GetDeviceList()
         {
             try
             {
@@ -133,22 +139,35 @@ namespace wpf_rtsp_streaming.Helpers
 
                 this.process.EnableRaisingEvents = true;
 
-                List<string> devices = new List<string>();
+                List<IDevice> devices = new List<IDevice>();
 
                 this.process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
                     string message = e.Data;
                     if (!string.IsNullOrEmpty(message))
                     {
-                        if (Regex.IsMatch(message, "dshow ", RegexOptions.IgnoreCase) && Regex.IsMatch(message, "(video)", RegexOptions.IgnoreCase))
+                        if (Regex.IsMatch(message, "dshow ", RegexOptions.IgnoreCase))
                         {
-                            string device = message;
-                            device = new Regex("\\(video\\)", RegexOptions.IgnoreCase).Replace(device, "");
-                            device = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(device, "");
-                            device = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(device, "");
-                            device = device.Trim();
+                            if (Regex.IsMatch(message, "\\(video\\)", RegexOptions.IgnoreCase) && (devices.Count == 0 || !string.IsNullOrEmpty(devices.LastOrDefault().AlternativeName)))
+                            {
+                                string name = message;
+                                name = new Regex("\\(video\\)", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = name.Trim();
 
-                            devices.Add(device);
+                                devices.Add(new IDevice() { Name = name });
+                            }
+                            else if (string.IsNullOrEmpty(devices.LastOrDefault().AlternativeName))
+                            {
+                                string alternativeName = message;
+                                alternativeName = new Regex("Alternative name", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = alternativeName.Trim();
+
+                                devices.LastOrDefault().AlternativeName = alternativeName;
+                            }
                         }
                     };
                 };
@@ -157,15 +176,28 @@ namespace wpf_rtsp_streaming.Helpers
                     string message = e.Data;
                     if (!string.IsNullOrEmpty(message))
                     {
-                        if (Regex.IsMatch(message, "dshow ", RegexOptions.IgnoreCase) && Regex.IsMatch(message, "(video)", RegexOptions.IgnoreCase))
+                        if (Regex.IsMatch(message, "dshow ", RegexOptions.IgnoreCase))
                         {
-                            string device = message;
-                            device = new Regex("\\(video\\)", RegexOptions.IgnoreCase).Replace(device, "");
-                            device = new Regex("^\\[dshow.*\\]", RegexOptions.IgnoreCase).Replace(device, "");
-                            device = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(device, "");
-                            device = device.Trim();
+                            if (Regex.IsMatch(message, "\\(video\\)", RegexOptions.IgnoreCase) && (devices.Count == 0 || !string.IsNullOrEmpty(devices.LastOrDefault()?.AlternativeName)))
+                            {
+                                string name = message;
+                                name = new Regex("\\(video\\)", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(name, "");
+                                name = name.Trim();
 
-                            devices.Add(device);
+                                devices.Add(new IDevice() { Name = name });
+                            }
+                            else if (devices.Count != 0 && string.IsNullOrEmpty(devices.LastOrDefault()?.AlternativeName))
+                            {
+                                string alternativeName = message;
+                                alternativeName = new Regex("Alternative name", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = new Regex("^\\[.*\\]", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = new Regex("(\"|')", RegexOptions.IgnoreCase).Replace(alternativeName, "");
+                                alternativeName = alternativeName.Trim();
+
+                                devices.LastOrDefault().AlternativeName = alternativeName;
+                            }
                         }
                     };
                 };
@@ -387,7 +419,7 @@ namespace wpf_rtsp_streaming.Helpers
 
                     if (i == 0)
                     {
-                        this.process.StandardInput.WriteLine($"ffmpeg.exe -list_options true -f dshow -i video=\"{this.filePath}\"");
+                        this.process.StandardInput.WriteLine($"ffmpeg.exe -list_options true -f dshow -i video=\"{this.deviceAlternativeName}\"");
                         App.PrintService.Log($"1, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
 
                         await formatCheckTaskCompletionSource.Task;
@@ -402,7 +434,7 @@ namespace wpf_rtsp_streaming.Helpers
                         string size = new Regex("s=", RegexOptions.IgnoreCase).Replace(deviceInfos[0], "").Trim();
                         string fps = new Regex("fps=", RegexOptions.IgnoreCase).Replace(deviceInfos[1], "").Trim();
 
-                        this.process.StandardInput.WriteLine($"ffmpeg.exe -f dshow -video_size {size} -framerate {fps} -i video=\"{this.filePath}\" -c:v libx264 -preset:v ultrafast -tune:v zerolatency -rtsp_transport tcp -pix_fmt yuvj420p -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
+                        this.process.StandardInput.WriteLine($"ffmpeg.exe -f dshow -video_size {size} -framerate {fps} -i video=\"{this.deviceAlternativeName}\" -c:v libx264 -preset:v ultrafast -tune:v zerolatency -rtsp_transport tcp -pix_fmt yuvj420p -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
                         App.PrintService.Log($"2, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
                     }
                 }

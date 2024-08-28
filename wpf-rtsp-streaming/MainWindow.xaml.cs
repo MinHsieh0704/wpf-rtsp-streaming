@@ -217,6 +217,7 @@ namespace wpf_rtsp_streaming
                 {
                     FilePath = e.FilePath,
                     RTSPPath = e.RTSPPath,
+                    DeviceAlternativeName = e.DeviceAlternativeName,
                     IsStart = false,
                     IsDownload = false,
                 };
@@ -486,6 +487,7 @@ namespace wpf_rtsp_streaming
                 Streaming streaming = new Streaming();
                 streaming.filePath = streamingInfo.FilePath;
                 streaming.rtspPath = streamingInfo.RTSPPath;
+                streaming.deviceAlternativeName = streamingInfo.DeviceAlternativeName;
 
                 streaming.onMessage.Subscribe((x) =>
                 {

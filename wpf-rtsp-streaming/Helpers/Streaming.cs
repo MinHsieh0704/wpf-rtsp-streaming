@@ -19,6 +19,13 @@ namespace wpf_rtsp_streaming.Helpers
             public string AlternativeName { get; set; }
         }
 
+        public class IDeviceInfo
+        {
+            public int width { get; set; }
+            public int height { get; set; }
+            public int fps { get; set; }
+        }
+
         private Process process { get; set; }
 
         public int processId { get; private set; } = -1;
@@ -325,7 +332,7 @@ namespace wpf_rtsp_streaming.Helpers
                     throw new Exception($"Can not found {file}");
                 }
 
-                string deviceInfo = "";
+                List<IDeviceInfo> deviceInfos = new List<IDeviceInfo>();
 
                 TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
                 for (int i = 0; i < 2; i++)
@@ -355,7 +362,24 @@ namespace wpf_rtsp_streaming.Helpers
                             {
                                 if (Regex.IsMatch(message, "^\\[dshow.*\\] +vcodec", RegexOptions.IgnoreCase) && !Regex.IsMatch(message, "\\)$", RegexOptions.IgnoreCase))
                                 {
-                                    deviceInfo = message;
+                                    string info = message;
+                                    info = info.Substring(info.IndexOf("max"));
+                                    info = new Regex("max *", RegexOptions.IgnoreCase).Replace(info, "");
+
+                                    List<string> infos = info.Split(' ').ToList();
+                                    string size = new Regex("s=", RegexOptions.IgnoreCase).Replace(infos[0], "").Trim();
+                                    int fps = Convert.ToInt32(new Regex("fps=", RegexOptions.IgnoreCase).Replace(infos[1], "").Trim());
+
+                                    List<string> sizes = size.Split('x').ToList();
+                                    int width = Convert.ToInt32(sizes[0]);
+                                    int height = Convert.ToInt32(sizes[1]);
+
+                                    deviceInfos.Add(new IDeviceInfo()
+                                    {
+                                        width = width,
+                                        height = height,
+                                        fps = fps,
+                                    });
                                 }
                             }
                             else
@@ -397,7 +421,24 @@ namespace wpf_rtsp_streaming.Helpers
                             {
                                 if (Regex.IsMatch(message, "^\\[dshow.*\\] +vcodec", RegexOptions.IgnoreCase) && !Regex.IsMatch(message, "\\)$", RegexOptions.IgnoreCase))
                                 {
-                                    deviceInfo = message;
+                                    string info = message;
+                                    info = info.Substring(info.IndexOf("max"));
+                                    info = new Regex("max *", RegexOptions.IgnoreCase).Replace(info, "");
+
+                                    List<string> infos = info.Split(' ').ToList();
+                                    string size = new Regex("s=", RegexOptions.IgnoreCase).Replace(infos[0], "").Trim();
+                                    int fps = Convert.ToInt32(new Regex("fps=", RegexOptions.IgnoreCase).Replace(infos[1], "").Trim());
+
+                                    List<string> sizes = size.Split('x').ToList();
+                                    int width = Convert.ToInt32(sizes[0]);
+                                    int height = Convert.ToInt32(sizes[1]);
+
+                                    deviceInfos.Add(new IDeviceInfo()
+                                    {
+                                        width = width,
+                                        height = height,
+                                        fps = fps,
+                                    });
                                 }
                             }
                             else
@@ -426,15 +467,15 @@ namespace wpf_rtsp_streaming.Helpers
                     }
                     else
                     {
-                        deviceInfo = deviceInfo.Substring(deviceInfo.IndexOf("max"));
-                        deviceInfo = new Regex("max *", RegexOptions.IgnoreCase).Replace(deviceInfo, "");
+                        deviceInfos = deviceInfos.GroupBy((n) => n.fps, (n) => n).FirstOrDefault()?.OrderByDescending((n) => n.width * n.height).ToList();
 
-                        List<string> deviceInfos = deviceInfo.Split(' ').ToList();
+                        IDeviceInfo deviceInfo = deviceInfos?.FirstOrDefault();
+                        if (deviceInfo == null)
+                        {
+                            throw new Exception("Device setting not found.");
+                        }
 
-                        string size = new Regex("s=", RegexOptions.IgnoreCase).Replace(deviceInfos[0], "").Trim();
-                        string fps = new Regex("fps=", RegexOptions.IgnoreCase).Replace(deviceInfos[1], "").Trim();
-
-                        this.process.StandardInput.WriteLine($"ffmpeg.exe -f dshow -video_size {size} -framerate {fps} -i video=\"{this.deviceAlternativeName}\" -c:v libx264 -preset:v ultrafast -tune:v zerolatency -rtsp_transport tcp -pix_fmt yuvj420p -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
+                        this.process.StandardInput.WriteLine($"ffmpeg.exe -f dshow -video_size {deviceInfo.width}x{deviceInfo.height} -framerate {deviceInfo.fps} -i video=\"{this.deviceAlternativeName}\" -c:v libx264 -preset:v ultrafast -tune:v zerolatency -rtsp_transport tcp -pix_fmt yuvj420p -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
                         App.PrintService.Log($"2, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
                     }
                 }

@@ -176,7 +176,7 @@ namespace wpf_rtsp_streaming.Helpers
                                 devices.LastOrDefault().AlternativeName = alternativeName;
                             }
                         }
-                    };
+                    }
                 };
                 this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
                 {
@@ -206,7 +206,7 @@ namespace wpf_rtsp_streaming.Helpers
                                 devices.LastOrDefault().AlternativeName = alternativeName;
                             }
                         }
-                    };
+                    }
                 };
 
                 TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
@@ -687,14 +687,14 @@ namespace wpf_rtsp_streaming.Helpers
 
                     if (i == 0)
                     {
-                        this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -F \"{url}\"");
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe --list-formats --no-playlist --no-check-certificate \"{url}\"");
                         App.PrintService.Log($"1, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
 
                         await formatCheckTaskCompletionSource.Task;
                     }
                     else
                     {
-                        this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --live-from-start --no-playlist -o - \"{url}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe --format \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --live-from-start --no-playlist --no-check-certificate -o - \"{url}\" | ffmpeg.exe -re -stream_loop -1 -i pipe: -c copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:{App.RTSPPort}/{this.rtspPath}");
                         App.PrintService.Log($"2, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
                     }
                 }
@@ -873,14 +873,14 @@ namespace wpf_rtsp_streaming.Helpers
 
                     if (i == 0)
                     {
-                        this.process.StandardInput.WriteLine($"yt-dlp.exe --no-playlist -F \"{url}\"");
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe --list-formats --no-playlist --no-check-certificate \"{url}\"");
                         App.PrintService.Log($"1, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
 
                         await formatCheckTaskCompletionSource.Task;
                     }
                     else
                     {
-                        this.process.StandardInput.WriteLine($"yt-dlp.exe -f \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --live-from-start --no-playlist -o \"{AppDomain.CurrentDomain.BaseDirectory}Downloads\\%(title)s.%(ext)s\" \"{url}\"");
+                        this.process.StandardInput.WriteLine($"yt-dlp.exe --format \"(bv*[vcodec~='^((he|a)vc|h26[45])'])\" --live-from-start --no-playlist --no-check-certificate -o \"{AppDomain.CurrentDomain.BaseDirectory}Downloads\\%(title)s.%(ext)s\" \"{url}\"");
                         App.PrintService.Log($"2, main: {this.process.ProcessName}[{this.process.Id}], child: {string.Join("; ", Community.GetChildProcess(this.processId).Select((n) => $"{n.ProcessName}[{n.Id}]").ToArray())}", Min_Helpers.PrintHelper.Print.EMode.info);
                     }
                 }

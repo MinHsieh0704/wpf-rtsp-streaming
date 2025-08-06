@@ -146,6 +146,54 @@
             </Setter>
         </Style>
 
+        <Style TargetType="Button" x:Key="ButtonUpdateYTDLP">
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder">
+                            <Border.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="Padding" Value="4,0"/>
+                                    <Setter Property="Background" Value="#ffffff"/>
+                                    <Setter Property="BorderBrush" Value="#35cda8"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                    <Setter Property="VerticalAlignment" Value="Top"/>
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                </Style>
+                            </Border.Resources>
+
+                            <Label x:Name="ButtonLabel">
+                                <Label.Resources>
+                                    <Style TargetType="Label">
+                                        <Setter Property="Content" Value="Update YT-DLP"/>
+                                        <Setter Property="Foreground" Value="#35cda8"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </Label.Resources>
+                            </Label>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#14896d"/>
+                                <Setter Property="Foreground" TargetName="ButtonLabel" Value="#14896d"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" TargetName="ButtonBorder" Value="#cecece"/>
+                                <Setter Property="BorderBrush" TargetName="ButtonBorder" Value="#cecece"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="Button" x:Key="ButtonAddStreaming">
             <Setter Property="IsTabStop" Value="False"/>
             <Setter Property="Template">
@@ -490,6 +538,15 @@
                         <Style TargetType="Button" BasedOn="{StaticResource ButtonStop}">
                             <Setter Property="Canvas.Left" Value="65"/>
                             <Setter Property="IsEnabled" Value="{Binding Path=IsStart, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <Button Click="ButtonUpdateYTDLP_Click">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource ButtonUpdateYTDLP}">
+                            <Setter Property="Canvas.Right" Value="130"/>
+                            <Setter Property="IsEnabled" Value="{Binding Path=IsStart, Converter={StaticResource ReverseBooleanConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
                         </Style>
                     </Button.Resources>
                 </Button>

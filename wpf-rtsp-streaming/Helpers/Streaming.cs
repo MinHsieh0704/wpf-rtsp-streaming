@@ -8,6 +8,7 @@ using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using System.Windows.Forms;
 
 namespace wpf_rtsp_streaming.Helpers
 {
@@ -889,6 +890,81 @@ namespace wpf_rtsp_streaming.Helpers
             }
             catch (OperationCanceledException e)
             {
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Update YT-DLP
+        /// </summary>
+        public async Task UpdateYTDLP()
+        {
+            try
+            {
+                string file = $"{AppDomain.CurrentDomain.BaseDirectory}mediamtx\\yt-dlp.exe";
+                if (!File.Exists(file))
+                {
+                    throw new Exception($"Can not found {file}");
+                }
+
+                this.process = new Process();
+
+                this.process.StartInfo.FileName = file;
+                this.process.StartInfo.UseShellExecute = false;
+                this.process.StartInfo.RedirectStandardOutput = true;
+                this.process.StartInfo.RedirectStandardError = true;
+                this.process.StartInfo.CreateNoWindow = true;
+                this.process.StartInfo.Arguments = $"--update";
+
+                this.process.EnableRaisingEvents = true;
+
+                this.process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+                {
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        this.onMessage.OnNext(message);
+                    }
+                };
+                this.process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+                {
+                    string message = e.Data;
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        this.onError.OnNext(new Exception(message));
+                    }
+                };
+
+                TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+                Task.Run(new Action(async () =>
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            if (this.process.HasExited)
+                            {
+                                taskCompletionSource.SetResult(true);
+                                break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                    }
+                }));
+
+                this.process.Start();
+                App.WritePID(this.processId, process.Id);
+                this.processId = this.process.Id;
+
+                this.process.BeginOutputReadLine();
+                this.process.BeginErrorReadLine();
+
+                await taskCompletionSource.Task;
             }
             catch (Exception ex)
             {

@@ -243,6 +243,64 @@ namespace wpf_rtsp_streaming
             }
         }
 
+        private async void ButtonUpdateYTDLP_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                this.IsShowLoading = true;
+
+                using (Streaming streaming = new Streaming())
+                {
+                    streaming.onMessage.Subscribe((x) =>
+                    {
+                        try
+                        {
+                            this.Dispatcher.Invoke(new Action(() =>
+                            {
+                                App.PrintService.Log($"Streaming_yt-dlp [{streaming.processId}], {x}", Print.EMode.message, $"Streaming_yt-dlp");
+                            }));
+                        }
+                        catch (TaskCanceledException ex)
+                        {
+                        }
+                    });
+                    streaming.onError.Subscribe((x) =>
+                    {
+                        try
+                        {
+                            this.Dispatcher.Invoke(new Action(() =>
+                            {
+                                x = ExceptionHelper.GetReal(x);
+                                string message = x.Message;
+
+                                App.PrintService.Log($"Streaming_yt-dlp [{streaming.processId}], {message}", Print.EMode.error, $"Streaming_yt-dlp");
+
+                                MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+                            }));
+                        }
+                        catch (TaskCanceledException ex)
+                        {
+                        }
+                    });
+
+                    await streaming.UpdateYTDLP();
+                }
+            }
+            catch (Exception ex)
+            {
+                ex = ExceptionHelper.GetReal(ex);
+                string message = ex.Message;
+
+                App.PrintService.Log($"{this.GetType().Name}, {message}", Print.EMode.error);
+
+                MessageBox.Show(message, App.AppName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                this.IsShowLoading = false;
+            }
+        }
+
         private void ButtonAddStreaming_Click(object sender, RoutedEventArgs e)
         {
             try
